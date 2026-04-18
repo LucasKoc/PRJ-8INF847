@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dpscheck_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-dpscheck}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dpscheck_dev_pwd}
+      POSTGRES_DB: ${DB_NAME:-dpscheck}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - dpscheck_pgdata:/var/lib/postgresql/data
+      - ./Backend/sql/dpscheck_schema_pgsql.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./Backend/sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-dpscheck} -d ${DB_NAME:-dpscheck}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - dpscheck_net
+
+  api:
+    build:
+      context: ./Backend/
+      dockerfile: Dockerfile
+    container_name: dpscheck_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3000
+      API_PREFIX: ${API_PREFIX:-api}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-dpscheck}
+      DB_PASSWORD: ${DB_PASSWORD:-dpscheck_dev_pwd}
+      DB_NAME: ${DB_NAME:-dpscheck}
+      DB_SYNCHRONIZE: "false"
+      DB_LOGGING: "false"
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_prod_with_a_long_random_value}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-3600s}
+    ports:
+      - "3000:3000"
+    networks:
+      - dpscheck_net
+
+volumes:
+  dpscheck_pgdata:
+
+networks:
+  dpscheck_net:
+    driver: bridge
