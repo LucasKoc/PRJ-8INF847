@@ -11,11 +11,7 @@ import { TournamentStatus } from '../../common/enums';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
 
-/**
- * Transitions autorisées du cycle de vie d'un tournoi.
- * DRAFT → OPEN → CLOSED → COMPLETED
- * DRAFT/OPEN → CANCELLED (coupure)
- */
+// Valid status transitions (mirror of PRD §6.5 + DB trigger)
 const ALLOWED_TRANSITIONS: Record<TournamentStatus, TournamentStatus[]> = {
   [TournamentStatus.DRAFT]: [TournamentStatus.OPEN, TournamentStatus.CANCELLED],
   [TournamentStatus.OPEN]: [TournamentStatus.CLOSED, TournamentStatus.CANCELLED],
@@ -26,105 +22,140 @@ const ALLOWED_TRANSITIONS: Record<TournamentStatus, TournamentStatus[]> = {
 
 @Injectable()
 export class TournamentsService {
-  constructor(
-    @InjectRepository(Tournament)
-    private readonly tournamentRepo: Repository<Tournament>,
-  ) {}
+  constructor(@InjectRepository(Tournament) private readonly tournaments: Repository<Tournament>) {}
 
-  findAll(): Promise<Tournament[]> {
-    return this.tournamentRepo.find({
-      relations: { organizer: true },
-      order: { startsAt: 'ASC' },
-    });
+  // =========================================================================
+  // READ
+  // =========================================================================
+
+  /**
+   * Gap-analysis Fix #2 — PRD §6.2
+   * Public list excludes DRAFT tournaments, but an authenticated TO also sees
+   * their own drafts. callerId is undefined for anonymous visitors.
+   */
+  async findAll(callerId?: string): Promise<Tournament[]> {
+    const qb = this.tournaments
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.organizer', 'o')
+      .orderBy('t.startsAt', 'ASC');
+
+    if (callerId) {
+      qb.where('(t.status != :draft OR t.organizerUserId = :me)', {
+        draft: TournamentStatus.DRAFT,
+        me: callerId,
+      });
+    } else {
+      qb.where('t.status != :draft', { draft: TournamentStatus.DRAFT });
+    }
+
+    return qb.getMany();
   }
 
-  async findById(id: string): Promise<Tournament> {
-    const tournament = await this.tournamentRepo.findOne({
+  async findOne(id: string): Promise<Tournament> {
+    const tournament = await this.tournaments.findOne({
       where: { id },
-      relations: { organizer: true, registrations: { team: true } },
+      relations: {
+        organizer: true,
+        registrations: { team: { captain: true } },
+      },
     });
-    if (!tournament) {
-      throw new NotFoundException(`Tournoi ${id} introuvable`);
-    }
+    if (!tournament) throw new NotFoundException(`Tournament ${id} not found`);
     return tournament;
   }
 
-  async create(organizerUserId: string, dto: CreateTournamentDto): Promise<Tournament> {
-    this.validateDates(dto.registrationDeadline, dto.startsAt, dto.endsAt ?? null);
+  // =========================================================================
+  // CREATE / UPDATE
+  // =========================================================================
 
-    const tournament = this.tournamentRepo.create({
-      ...dto,
-      game: dto.game ?? 'League of Legends',
-      organizerUserId,
-      status: TournamentStatus.DRAFT,
-    });
-    return this.tournamentRepo.save(tournament);
-  }
+  async create(organizerUserId: number | string, dto: CreateTournamentDto): Promise<Tournament> {
+    const registrationDeadline = new Date(dto.registrationDeadline);
+    const startsAt = new Date(dto.startsAt);
+    const endsAt = dto.endsAt ? new Date(dto.endsAt) : null;
 
-  async update(id: string, requesterUserId: string, dto: UpdateTournamentDto): Promise<Tournament> {
-    const tournament = await this.findById(id);
-    this.assertIsOrganizer(tournament, requesterUserId);
-
-    if (tournament.status !== TournamentStatus.DRAFT) {
-      throw new BadRequestException('Seul un tournoi en statut DRAFT peut être modifié');
+    if (registrationDeadline >= startsAt) {
+      throw new BadRequestException('Registration deadline must precede the start date');
+    }
+    if (endsAt && endsAt <= startsAt) {
+      throw new BadRequestException('End date must be after the start date');
     }
 
-    Object.assign(tournament, dto);
-    this.validateDates(
-      tournament.registrationDeadline,
-      tournament.startsAt,
-      tournament.endsAt ?? null,
-    );
-    return this.tournamentRepo.save(tournament);
+    const tournament = this.tournaments.create({
+      organizerUserId: String(organizerUserId),
+      name: dto.name.trim(),
+      game: dto.game ?? 'League of Legends',
+      format: dto.format,
+      registrationDeadline,
+      startsAt,
+      endsAt,
+      maxTeams: dto.maxTeams,
+      status: TournamentStatus.DRAFT,
+    });
+    return this.tournaments.save(tournament);
   }
+
+  async update(
+    id: string,
+    callerId: number | string,
+    dto: UpdateTournamentDto,
+  ): Promise<Tournament> {
+    const tournament = await this.findOne(id);
+    this.assertOwnership(tournament, callerId);
+
+    // PRD §6.5: edits only allowed while DRAFT
+    if (tournament.status !== TournamentStatus.DRAFT) {
+      throw new BadRequestException(
+        'Tournament can only be edited while in DRAFT. Once OPEN, tournaments are locked.',
+      );
+    }
+
+    if (dto.name !== undefined) tournament.name = dto.name.trim();
+    if (dto.game !== undefined) tournament.game = dto.game;
+    if (dto.format !== undefined) tournament.format = dto.format;
+    if (dto.registrationDeadline !== undefined) {
+      tournament.registrationDeadline = new Date(dto.registrationDeadline);
+    }
+    if (dto.startsAt !== undefined) tournament.startsAt = new Date(dto.startsAt);
+    if (dto.endsAt !== undefined) {
+      tournament.endsAt = dto.endsAt ? new Date(dto.endsAt) : null;
+    }
+    if (dto.maxTeams !== undefined) tournament.maxTeams = dto.maxTeams;
+
+    if (tournament.registrationDeadline >= tournament.startsAt) {
+      throw new BadRequestException('Registration deadline must precede the start date');
+    }
+
+    return this.tournaments.save(tournament);
+  }
+
+  // =========================================================================
+  // STATUS LIFECYCLE
+  // =========================================================================
 
   async changeStatus(
     id: string,
-    requesterUserId: string,
+    callerId: number | string,
     next: TournamentStatus,
   ): Promise<Tournament> {
-    const tournament = await this.findById(id);
-    this.assertIsOrganizer(tournament, requesterUserId);
+    const tournament = await this.findOne(id);
+    this.assertOwnership(tournament, callerId);
 
     const allowed = ALLOWED_TRANSITIONS[tournament.status];
     if (!allowed.includes(next)) {
-      throw new BadRequestException(`Transition ${tournament.status} → ${next} non autorisée`);
+      throw new BadRequestException(
+        `Cannot transition from ${tournament.status} to ${next}. Allowed next states: [${allowed.join(', ') || 'none'}]`,
+      );
     }
-
     tournament.status = next;
-    return this.tournamentRepo.save(tournament);
+    return this.tournaments.save(tournament);
   }
 
-  async remove(id: string, requesterUserId: string): Promise<void> {
-    const tournament = await this.findById(id);
-    this.assertIsOrganizer(tournament, requesterUserId);
+  // =========================================================================
+  // internal
+  // =========================================================================
 
-    if (tournament.status !== TournamentStatus.DRAFT) {
-      throw new BadRequestException(
-        'Seul un tournoi DRAFT peut être supprimé. Utilisez CANCELLED sinon.',
-      );
-    }
-    await this.tournamentRepo.remove(tournament);
-  }
-
-  assertIsOrganizer(tournament: Tournament, requesterUserId: string): void {
-    if (tournament.organizerUserId !== requesterUserId) {
-      throw new ForbiddenException("Seul l'organisateur peut gérer ce tournoi");
-    }
-  }
-
-  private validateDates(registrationDeadline: Date, startsAt: Date, endsAt: Date | null): void {
-    const now = new Date();
-    if (startsAt <= now) {
-      throw new BadRequestException('La date de début doit être postérieure à la date actuelle');
-    }
-    if (registrationDeadline >= startsAt) {
-      throw new BadRequestException("La date limite d'inscription doit précéder la date de début");
-    }
-    if (endsAt && endsAt < startsAt) {
-      throw new BadRequestException(
-        'La date de fin doit être postérieure ou égale à la date de début',
-      );
+  private assertOwnership(tournament: Tournament, callerId: number | string): void {
+    if (tournament.organizerUserId !== String(callerId)) {
+      throw new ForbiddenException('Only the organizing TO can perform this action');
     }
   }
 }

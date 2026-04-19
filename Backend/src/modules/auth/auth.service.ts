@@ -6,67 +6,75 @@ import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { JwtPayload } from '../../common/decorators/current-user.decorator';
 
-const BCRYPT_ROUNDS = 10;
+const BCRYPT_COST = 10;
+
+export interface AuthResult {
+  accessToken: string;
+  user: {
+    id: string;
+    email: string;
+    username: string;
+    role: string;
+  };
+}
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User) private readonly userRepo: Repository<User>,
-    private readonly jwtService: JwtService,
+    @InjectRepository(User) private readonly users: Repository<User>,
+    private readonly jwt: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
-    const exists = await this.userRepo
-      .createQueryBuilder('u')
-      .where('u.email = :email OR u.username = :username', {
-        email: dto.email,
-        username: dto.username,
-      })
-      .getOne();
-
-    if (exists) {
-      throw new ConflictException('Email ou username déjà utilisé');
+  async register(dto: RegisterDto): Promise<AuthResult> {
+    // Unique-by-email and unique-by-username pre-check for cleaner errors
+    const existing = await this.users.findOne({
+      where: [{ email: dto.email.toLowerCase() }, { username: dto.username }],
+    });
+    if (existing) {
+      if (existing.email === dto.email.toLowerCase()) {
+        throw new ConflictException('An account with this email already exists');
+      }
+      throw new ConflictException('This username is already taken');
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
-    const user = this.userRepo.create({
-      email: dto.email,
+    const passwordHash = await bcrypt.hash(dto.password, BCRYPT_COST);
+    const user = this.users.create({
+      email: dto.email.toLowerCase(),
       username: dto.username,
       passwordHash,
       role: dto.role,
     });
-    const saved = await this.userRepo.save(user);
-
-    return this.buildToken(saved);
+    const saved = await this.users.save(user);
+    return this.buildResult(saved);
   }
 
-  async login(dto: LoginDto) {
-    const user = await this.userRepo
-      .createQueryBuilder('u')
-      .where('u.email = :id OR u.username = :id', { id: dto.identifier })
-      .getOne();
+  async login(dto: LoginDto): Promise<AuthResult> {
+    const identifier = dto.identifier.trim();
+    const user = await this.users.findOne({
+      where: [{ email: identifier.toLowerCase() }, { username: identifier }],
+    });
+    // Generic error to avoid user enumeration
+    const genericError = new UnauthorizedException('Invalid credentials');
+    if (!user) throw genericError;
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('Identifiants invalides');
-    }
+    const match = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!match) throw genericError;
 
-    const valid = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!valid) {
-      throw new UnauthorizedException('Identifiants invalides');
-    }
-
-    return this.buildToken(user);
+    return this.buildResult(user);
   }
 
-  private buildToken(user: User) {
-    const payload = {
-      sub: user.id,
+  private buildResult(user: User): AuthResult {
+    const payload: JwtPayload = {
+      sub: Number(user.id),
       username: user.username,
+      email: user.email,
       role: user.role,
     };
+    const accessToken = this.jwt.sign(payload);
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
       user: {
         id: user.id,
         email: user.email,

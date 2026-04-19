@@ -26,19 +26,19 @@ export class Team {
   @Column({ name: 'captain_user_id', type: 'bigint' })
   captainUserId!: string;
 
-  @ManyToOne(() => User, user => user.captainOfTeams, { onDelete: 'RESTRICT' })
+  @ManyToOne(() => User, user => user.captainedTeams, { eager: false })
   @JoinColumn({ name: 'captain_user_id' })
-  captain!: User;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt!: Date;
+  captain?: User;
 
   @OneToMany(() => TeamMember, member => member.team)
   members?: TeamMember[];
 
   @OneToMany(() => TournamentRegistration, reg => reg.team)
   registrations?: TournamentRegistration[];
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt!: Date;
 }

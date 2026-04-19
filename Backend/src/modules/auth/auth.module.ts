@@ -6,7 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../../entities/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtStrategy } from './jwt.strategy';
 
 type JwtExpiresIn = NonNullable<import('jsonwebtoken').SignOptions['expiresIn']>;
 
@@ -18,14 +18,15 @@ type JwtExpiresIn = NonNullable<import('jsonwebtoken').SignOptions['expiresIn']>
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.getOrThrow<string>('jwt.secret'),
+        secret: config.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: config.getOrThrow<JwtExpiresIn>('jwt.expiresIn'),
+          expiresIn: config.getOrThrow<JwtExpiresIn>('JWT_EXPIRES_IN'),
         },
       }),
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

@@ -18,20 +18,17 @@ export class User {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id!: string;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 254, unique: true })
   email!: string;
 
   @Column({ type: 'varchar', length: 50, unique: true })
   username!: string;
 
-  @Column({ name: 'password_hash', type: 'text' })
+  @Column({ name: 'password_hash', type: 'varchar', length: 255 })
   passwordHash!: string;
 
   @Column({ type: 'enum', enum: UserRole })
   role!: UserRole;
-
-  @Column({ name: 'is_active', type: 'boolean', default: true })
-  isActive!: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
@@ -43,7 +40,7 @@ export class User {
   playerProfile?: PlayerProfile;
 
   @OneToMany(() => Team, team => team.captain)
-  captainOfTeams?: Team[];
+  captainedTeams?: Team[];
 
   @OneToMany(() => TeamMember, member => member.user)
   teamMemberships?: TeamMember[];

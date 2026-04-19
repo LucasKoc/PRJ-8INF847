@@ -1,28 +1,28 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthenticatedUser, CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly users: UsersService) {}
 
-  @Get('me')
-  async me(@CurrentUser() current: AuthenticatedUser) {
-    const user = await this.usersService.findById(current.userId);
-    return this.usersService.toPublic(user);
-  }
-
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @Get('search')
+  @ApiOperation({
+    summary: 'Search users by username (for adding team members)',
+  })
+  search(@Query('q') q: string, @Query('limit') limit?: string) {
+    const parsed = limit ? Math.min(Number(limit) || 10, 25) : 10;
+    return this.users.search(q ?? '', parsed);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a user by ID (public fields only)' })
   async findOne(@Param('id') id: string) {
-    const user = await this.usersService.findById(id);
-    return this.usersService.toPublic(user);
+    const user = await this.users.findOneById(id);
+    return { id: user.id, username: user.username, role: user.role };
   }
 }

@@ -1,19 +1,29 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
-async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { cors: true });
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, { cors: false });
   const config = app.get(ConfigService);
-  const apiPrefix = config.get<string>('apiPrefix', 'api');
-  const port = config.get<number>('port', 3000);
+  const logger = new Logger('Bootstrap');
 
-  app.use(helmet());
-  app.setGlobalPrefix(apiPrefix);
+  const port = parseInt(config.get<string>('PORT', '3000'), 10);
+  const prefix = config.get<string>('API_PREFIX', 'api');
+  const corsOrigin = config.get<string>('CORS_ORIGIN', 'http://localhost:4200');
+
+  app.setGlobalPrefix(prefix);
+  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
+
+  app.use(helmet({ contentSecurityPolicy: false }));
+
+  app.enableCors({
+    origin: corsOrigin.split(',').map(o => o.trim()),
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -24,20 +34,23 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  app.useGlobalFilters(new AllExceptionsFilter());
-
+  // Swagger
   const swaggerConfig = new DocumentBuilder()
     .setTitle('DPSCHECK API')
-    .setDescription('API backend')
-    .setVersion('0.1.0')
+    .setDescription(
+      'Tournament management API for casual League of Legends communities. ' +
+        'V1 covers auth, teams, tournaments, and registrations. ' +
+        'Bracket system and password reset are planned for V2 — their endpoints return 501.',
+    )
+    .setVersion('1.0')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
+  SwaggerModule.setup(`${prefix}/docs`, app, document);
 
   await app.listen(port);
-  Logger.log(`DPSCHECK API - http://localhost:${port}/${apiPrefix}`, 'Bootstrap');
-  Logger.log(`Swagger - http://localhost:${port}/${apiPrefix}/docs`, 'Bootstrap');
+  logger.log(`DPSCHECK API running on http://localhost:${port}/${prefix}`);
+  logger.log(`Swagger docs at http://localhost:${port}/${prefix}/docs`);
 }
 
-bootstrap();
+void bootstrap();

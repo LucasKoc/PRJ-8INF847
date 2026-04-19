@@ -3,7 +3,7 @@ import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { LolRole } from '../../../common/enums';
 
 export class AddTeamMemberDto {
-  @ApiProperty({ example: '42', description: 'ID du joueur à ajouter' })
+  @ApiProperty({ example: '42', description: 'The DPSCHECK user ID to add' })
   @IsString()
   userId!: string;
 
@@ -11,7 +11,7 @@ export class AddTeamMemberDto {
   @IsEnum(LolRole)
   role!: LolRole;
 
-  @ApiPropertyOptional({ default: false })
+  @ApiPropertyOptional({ example: false, default: false })
   @IsOptional()
   @IsBoolean()
   isSubstitute?: boolean;

@@ -3,7 +3,7 @@ import { IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'cla
 import { LolRole } from '../../../common/enums';
 
 export class CreatePlayerProfileDto {
-  @ApiProperty({ example: 'Caliste', minLength: 3, maxLength: 50 })
+  @ApiProperty({ example: 'AliceMid', minLength: 3, maxLength: 50 })
   @IsString()
   @MinLength(3)
   @MaxLength(50)
@@ -13,9 +13,7 @@ export class CreatePlayerProfileDto {
   @IsString()
   @MinLength(2)
   @MaxLength(10)
-  @Matches(/^[A-Za-z0-9]+$/, {
-    message: 'tagLine : lettres et chiffres uniquement',
-  })
+  @Matches(/^[A-Za-z0-9]+$/, { message: 'Tag line must be alphanumeric' })
   tagLine!: string;
 
   @ApiProperty({ example: 'EUW1', maxLength: 20 })
@@ -23,19 +21,20 @@ export class CreatePlayerProfileDto {
   @MaxLength(20)
   region!: string;
 
-  @ApiPropertyOptional({ example: 'Diamond II' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(30)
-  rank?: string;
-
-  @ApiPropertyOptional({ enum: LolRole })
+  @ApiPropertyOptional({ enum: LolRole, example: LolRole.MID })
   @IsOptional()
   @IsEnum(LolRole)
   mainRole?: LolRole;
 
-  @ApiPropertyOptional({ example: 'Main ADC depuis S9.' })
+  @ApiPropertyOptional({ example: 'Diamond II' })
   @IsOptional()
   @IsString()
+  @MaxLength(50)
+  rank?: string;
+
+  @ApiPropertyOptional({ example: 'Midlane main, assassin enjoyer.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
   bio?: string;
 }

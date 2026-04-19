@@ -32,3 +32,8 @@ export enum RegistrationStatus {
   REJECTED = 'REJECTED',
   CANCELLED = 'CANCELLED',
 }
+
+export enum TournamentFormat {
+  BO1 = 'BO1',
+  BO3 = 'BO3',
+}

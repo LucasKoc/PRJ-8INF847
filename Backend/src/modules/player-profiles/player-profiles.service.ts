@@ -15,52 +15,61 @@ import { UpdatePlayerProfileDto } from './dto/update-player-profile.dto';
 @Injectable()
 export class PlayerProfilesService {
   constructor(
-    @InjectRepository(PlayerProfile)
-    private readonly profileRepo: Repository<PlayerProfile>,
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
+    @InjectRepository(PlayerProfile) private readonly profiles: Repository<PlayerProfile>,
+    @InjectRepository(User) private readonly users: Repository<User>,
   ) {}
 
-  findAll(): Promise<PlayerProfile[]> {
-    return this.profileRepo.find({ order: { createdAt: 'DESC' } });
-  }
-
-  async findByUserId(userId: string): Promise<PlayerProfile> {
-    const profile = await this.profileRepo.findOne({ where: { userId } });
-    if (!profile) {
-      throw new NotFoundException(`Aucun profil joueur pour l'utilisateur ${userId}`);
-    }
+  async findMine(userId: number | string): Promise<PlayerProfile> {
+    const id = String(userId);
+    const profile = await this.profiles.findOne({ where: { userId: id } });
+    if (!profile) throw new NotFoundException('Player profile not found');
     return profile;
   }
 
-  async create(userId: string, dto: CreatePlayerProfileDto): Promise<PlayerProfile> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException(`Utilisateur ${userId} introuvable`);
-    }
+  async findByUserId(userId: string): Promise<PlayerProfile> {
+    const profile = await this.profiles.findOne({ where: { userId } });
+    if (!profile) throw new NotFoundException('Player profile not found');
+    return profile;
+  }
+
+  async create(userId: number | string, dto: CreatePlayerProfileDto): Promise<PlayerProfile> {
+    const id = String(userId);
+    const user = await this.users.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
     if (user.role !== UserRole.PLAYER) {
-      throw new BadRequestException(
-        'Seul un utilisateur de rôle PLAYER peut créer un profil joueur',
-      );
+      throw new BadRequestException('Only PLAYER accounts can have a player profile');
     }
 
-    const existing = await this.profileRepo.findOne({ where: { userId } });
-    if (existing) {
-      throw new ConflictException('Un profil joueur existe déjà');
-    }
+    const existing = await this.profiles.findOne({ where: { userId: id } });
+    if (existing) throw new ConflictException('This user already has a player profile');
 
-    const profile = this.profileRepo.create({ ...dto, userId });
-    return this.profileRepo.save(profile);
+    const profile = this.profiles.create({
+      userId: id,
+      summonerName: dto.summonerName,
+      tagLine: dto.tagLine,
+      region: dto.region,
+      mainRole: dto.mainRole ?? null,
+      rank: dto.rank ?? null,
+      bio: dto.bio ?? null,
+    });
+    return this.profiles.save(profile);
   }
 
-  async update(userId: string, dto: UpdatePlayerProfileDto): Promise<PlayerProfile> {
-    const profile = await this.findByUserId(userId);
-    Object.assign(profile, dto);
-    return this.profileRepo.save(profile);
+  async update(userId: number | string, dto: UpdatePlayerProfileDto): Promise<PlayerProfile> {
+    const id = String(userId);
+    const profile = await this.findMine(id);
+    if (dto.summonerName !== undefined) profile.summonerName = dto.summonerName;
+    if (dto.tagLine !== undefined) profile.tagLine = dto.tagLine;
+    if (dto.region !== undefined) profile.region = dto.region;
+    if (dto.mainRole !== undefined) profile.mainRole = dto.mainRole;
+    if (dto.rank !== undefined) profile.rank = dto.rank;
+    if (dto.bio !== undefined) profile.bio = dto.bio;
+    return this.profiles.save(profile);
   }
 
-  async remove(userId: string): Promise<void> {
-    const profile = await this.findByUserId(userId);
-    await this.profileRepo.remove(profile);
+  async remove(userId: number | string): Promise<void> {
+    const id = String(userId);
+    const profile = await this.findMine(id);
+    await this.profiles.remove(profile);
   }
 }

@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { UserRole } from '../enums';
+import { JwtPayload } from '../decorators/current-user.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -12,14 +13,16 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    if (!requiredRoles || requiredRoles.length === 0) return true;
 
-    if (!requiredRoles || requiredRoles.length === 0) {
-      return true;
-    }
+    const request = context.switchToHttp().getRequest();
+    const user = request.user as JwtPayload | undefined;
+    if (!user) throw new ForbiddenException('Authentication required');
 
-    const { user } = context.switchToHttp().getRequest();
-    if (!user || !requiredRoles.includes(user.role)) {
-      throw new ForbiddenException(`Accès réservé aux rôles : ${requiredRoles.join(', ')}`);
+    if (!requiredRoles.includes(user.role)) {
+      throw new ForbiddenException(
+        `This action requires one of the following roles: ${requiredRoles.join(', ')}`,
+      );
     }
     return true;
   }

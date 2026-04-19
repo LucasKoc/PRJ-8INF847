@@ -8,15 +8,10 @@ export class CreateTeamDto {
   @MaxLength(80)
   name!: string;
 
-  @ApiProperty({
-    example: 'PHX',
-    description: '2 à 3 caractères alphanumériques',
-    minLength: 2,
-    maxLength: 3,
-  })
+  @ApiProperty({ example: 'PHX', minLength: 2, maxLength: 3 })
   @IsString()
   @Matches(/^[A-Za-z0-9]{2,3}$/, {
-    message: 'tag : 2 à 3 caractères alphanumériques uniquement',
+    message: 'Tag must be 2 or 3 alphanumeric characters',
   })
   tag!: string;
 }

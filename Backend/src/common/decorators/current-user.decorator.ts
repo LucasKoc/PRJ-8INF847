@@ -1,15 +1,20 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { UserRole } from '../enums';
 
-export interface AuthenticatedUser {
-  userId: string;
+export interface JwtPayload {
+  sub: number;
   username: string;
-  role: string;
+  email: string;
+  role: UserRole;
+  iat?: number;
+  exp?: number;
 }
 
 export const CurrentUser = createParamDecorator(
-  (data: keyof AuthenticatedUser | undefined, ctx: ExecutionContext) => {
+  (data: keyof JwtPayload | undefined, ctx: ExecutionContext): JwtPayload | unknown => {
     const request = ctx.switchToHttp().getRequest();
-    const user = request.user as AuthenticatedUser;
-    return data ? user?.[data] : user;
+    const user = request.user as JwtPayload | undefined;
+    if (!user) return undefined;
+    return data ? user[data] : user;
   },
 );

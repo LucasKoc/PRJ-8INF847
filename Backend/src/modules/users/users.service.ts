@@ -3,33 +3,31 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
 
+export interface PublicUser {
+  id: string;
+  username: string;
+  role: string;
+}
+
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private readonly userRepo: Repository<User>) {}
+  constructor(@InjectRepository(User) private readonly users: Repository<User>) {}
 
-  async findById(id: string): Promise<User> {
-    const user = await this.userRepo.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`Utilisateur ${id} introuvable`);
-    }
+  async findOneById(id: string): Promise<User> {
+    const user = await this.users.findOne({ where: { id } });
+    if (!user) throw new NotFoundException(`User with id ${id} not found`);
     return user;
   }
 
-  findAll(): Promise<User[]> {
-    return this.userRepo.find({
-      select: ['id', 'email', 'username', 'role', 'isActive', 'createdAt'],
-      order: { createdAt: 'DESC' },
-    });
-  }
-
-  async toPublic(user: User) {
-    return {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      role: user.role,
-      isActive: user.isActive,
-      createdAt: user.createdAt,
-    };
+  async search(query: string, limit = 10): Promise<PublicUser[]> {
+    const q = (query ?? '').trim();
+    if (q.length < 2) return [];
+    const rows = await this.users
+      .createQueryBuilder('u')
+      .where('u.username ILIKE :q', { q: `%${q}%` })
+      .orderBy('u.username', 'ASC')
+      .limit(Math.min(Math.max(limit, 1), 25))
+      .getMany();
+    return rows.map(u => ({ id: u.id, username: u.username, role: u.role }));
   }
 }

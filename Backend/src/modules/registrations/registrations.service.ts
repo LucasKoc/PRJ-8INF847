@@ -1,150 +1,180 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { TournamentRegistration } from '../../entities/tournament-registration.entity';
 import { Tournament } from '../../entities/tournament.entity';
 import { Team } from '../../entities/team.entity';
 import { RegistrationStatus, TournamentStatus } from '../../common/enums';
 import { TeamsService } from '../teams/teams.service';
-import { RegisterTeamDto } from './dto/register-team.dto';
 import { ReviewRegistrationDto } from './dto/review-registration.dto';
+
+const MIN_STARTERS = 5;
 
 @Injectable()
 export class RegistrationsService {
   constructor(
     @InjectRepository(TournamentRegistration)
-    private readonly regRepo: Repository<TournamentRegistration>,
-    @InjectRepository(Tournament)
-    private readonly tournamentRepo: Repository<Tournament>,
-    @InjectRepository(Team) private readonly teamRepo: Repository<Team>,
+    private readonly regs: Repository<TournamentRegistration>,
+    @InjectRepository(Tournament) private readonly tournaments: Repository<Tournament>,
+    @InjectRepository(Team) private readonly teams: Repository<Team>,
     private readonly teamsService: TeamsService,
   ) {}
 
-  listByTournament(tournamentId: string): Promise<TournamentRegistration[]> {
-    return this.regRepo.find({
+  async listForTournament(tournamentId: string): Promise<TournamentRegistration[]> {
+    return this.regs.find({
       where: { tournamentId },
-      relations: { team: true },
-      order: { registeredAt: 'ASC' },
+      relations: { team: { captain: true } },
+      order: { createdAt: 'ASC' },
     });
-  }
-
-  async findById(id: string): Promise<TournamentRegistration> {
-    const reg = await this.regRepo.findOne({
-      where: { id },
-      relations: { tournament: true, team: true },
-    });
-    if (!reg) {
-      throw new NotFoundException(`Inscription ${id} introuvable`);
-    }
-    return reg;
   }
 
   /**
-   * Inscription d'une équipe à un tournoi par son capitaine.
-   * Vérifie les contraintes métier (reprises côté applicatif, redondantes
-   * avec les triggers SQL mais permettent des messages d'erreur plus clairs).
+   * Captain submits their team.
+   * PRD §6.5 validations: tournament OPEN, deadline not passed, team eligible,
+   * not already registered, max teams not reached.
    */
   async register(
     tournamentId: string,
-    requesterUserId: string,
-    dto: RegisterTeamDto,
+    teamId: string,
+    callerId: number | string,
   ): Promise<TournamentRegistration> {
-    const tournament = await this.tournamentRepo.findOne({
-      where: { id: tournamentId },
-    });
-    if (!tournament) {
-      throw new NotFoundException(`Tournoi ${tournamentId} introuvable`);
-    }
+    const tournament = await this.tournaments.findOne({ where: { id: tournamentId } });
+    if (!tournament) throw new NotFoundException(`Tournament ${tournamentId} not found`);
+
     if (tournament.status !== TournamentStatus.OPEN) {
-      throw new BadRequestException("Le tournoi n'est pas ouvert aux inscriptions");
-    }
-    if (tournament.registrationDeadline <= new Date()) {
-      throw new BadRequestException("La date limite d'inscription est dépassée");
-    }
-
-    const team = await this.teamRepo.findOne({ where: { id: dto.teamId } });
-    if (!team) {
-      throw new NotFoundException(`Équipe ${dto.teamId} introuvable`);
-    }
-    if (team.captainUserId !== requesterUserId) {
-      throw new ForbiddenException('Seul le capitaine peut inscrire son équipe');
-    }
-
-    const starters = await this.teamsService.countActiveStarters(team.id);
-    if (starters < 5) {
       throw new BadRequestException(
-        `L'équipe doit compter au moins 5 joueurs titulaires actifs (actuellement : ${starters})`,
+        `Tournament is not open for registration (current status: ${tournament.status})`,
       );
     }
 
-    const alreadyRegistered = await this.regRepo.findOne({
-      where: { tournamentId, teamId: team.id },
+    // --- Gap-analysis Fix #3 — PRD §6.5 ---
+    // Status can be OPEN but deadline already passed → still block new registrations.
+    const now = new Date();
+    if (tournament.registrationDeadline <= now) {
+      throw new BadRequestException('Registration deadline has passed for this tournament');
+    }
+
+    const team = await this.teams.findOne({ where: { id: teamId } });
+    if (!team) throw new NotFoundException(`Team ${teamId} not found`);
+    if (team.captainUserId !== String(callerId)) {
+      throw new ForbiddenException('Only the team captain can register the team');
+    }
+
+    // Eligibility — minimum 5 active non-substitute starters
+    const starters = await this.teamsService.countActiveStarters(teamId);
+    if (starters < MIN_STARTERS) {
+      throw new BadRequestException(
+        `Team has ${starters} of ${MIN_STARTERS} required active starters. Add more members before registering.`,
+      );
+    }
+
+    // Not already registered for this tournament (in a non-cancelled/non-rejected state)
+    const existing = await this.regs.findOne({
+      where: {
+        tournamentId,
+        teamId,
+        status: Not(RegistrationStatus.CANCELLED) as never,
+      },
     });
-    if (alreadyRegistered) {
-      throw new BadRequestException('Cette équipe est déjà inscrite');
+    if (existing && existing.status !== RegistrationStatus.REJECTED) {
+      throw new ConflictException('This team is already registered for this tournament');
     }
 
-    const currentCount = await this.regRepo.count({ where: { tournamentId } });
-    if (currentCount >= tournament.maxTeams) {
+    // Max teams check — count non-cancelled, non-rejected registrations
+    const activeCount = await this.regs.count({
+      where: [
+        { tournamentId, status: RegistrationStatus.PENDING },
+        { tournamentId, status: RegistrationStatus.APPROVED },
+      ],
+    });
+    if (activeCount >= tournament.maxTeams) {
       throw new BadRequestException(
-        `Le tournoi a atteint son nombre maximal d'équipes (${tournament.maxTeams})`,
+        `Tournament has reached its maximum of ${tournament.maxTeams} teams`,
       );
     }
 
-    const registration = this.regRepo.create({
+    const registration = this.regs.create({
       tournamentId,
-      teamId: team.id,
+      teamId,
       status: RegistrationStatus.PENDING,
     });
-    return this.regRepo.save(registration);
+    return this.regs.save(registration);
   }
 
   /**
-   * Arbitrage d'une inscription par l'organisateur du tournoi.
+   * TO reviews a PENDING registration → APPROVED or REJECTED.
    */
   async review(
     registrationId: string,
-    reviewerUserId: string,
+    reviewerUserId: number | string,
     dto: ReviewRegistrationDto,
   ): Promise<TournamentRegistration> {
-    const reg = await this.findById(registrationId);
+    const registration = await this.regs.findOne({
+      where: { id: registrationId },
+      relations: { tournament: true },
+    });
+    if (!registration) throw new NotFoundException(`Registration ${registrationId} not found`);
+    if (!registration.tournament) throw new NotFoundException('Parent tournament not found');
 
-    if (reg.tournament.organizerUserId !== reviewerUserId) {
-      throw new ForbiddenException(
-        "Seul l'organisateur du tournoi peut arbitrer cette inscription",
+    if (registration.tournament.organizerUserId !== String(reviewerUserId)) {
+      throw new ForbiddenException('Only the organizing TO can review registrations');
+    }
+    if (registration.status !== RegistrationStatus.PENDING) {
+      throw new BadRequestException(
+        `Registration has already been reviewed (current status: ${registration.status})`,
       );
     }
-    if (reg.status !== RegistrationStatus.PENDING) {
-      throw new BadRequestException(`Inscription déjà traitée (statut : ${reg.status})`);
-    }
 
-    reg.status = dto.status;
-    reg.reviewedAt = new Date();
-    reg.reviewedBy = reviewerUserId;
-    reg.reviewNote = dto.reviewNote ?? null;
-    return this.regRepo.save(reg);
+    registration.status = dto.status;
+    registration.reviewNote = dto.reviewNote ?? null;
+    registration.reviewedByUserId = String(reviewerUserId);
+    registration.reviewedAt = new Date();
+    return this.regs.save(registration);
   }
 
   /**
-   * Annulation d'une inscription par le capitaine de l'équipe.
+   * Captain cancels a PENDING or APPROVED registration.
    */
-  async cancel(registrationId: string, requesterUserId: string): Promise<TournamentRegistration> {
-    const reg = await this.findById(registrationId);
-
-    if (reg.team.captainUserId !== requesterUserId) {
-      throw new ForbiddenException("Seul le capitaine de l'équipe peut annuler cette inscription");
+  async cancel(registrationId: string, callerId: number | string): Promise<TournamentRegistration> {
+    const registration = await this.regs.findOne({
+      where: { id: registrationId },
+      relations: { team: true, tournament: true },
+    });
+    if (!registration) throw new NotFoundException(`Registration ${registrationId} not found`);
+    if (!registration.team || !registration.tournament) {
+      throw new NotFoundException('Related team or tournament not found');
     }
-    if (reg.status !== RegistrationStatus.PENDING && reg.status !== RegistrationStatus.APPROVED) {
-      throw new BadRequestException('Inscription déjà annulée ou rejetée');
+
+    if (registration.team.captainUserId !== String(callerId)) {
+      throw new ForbiddenException('Only the team captain can cancel this registration');
     }
 
-    reg.status = RegistrationStatus.CANCELLED;
-    reg.reviewedAt = new Date();
-    return this.regRepo.save(reg);
+    if (
+      registration.status !== RegistrationStatus.PENDING &&
+      registration.status !== RegistrationStatus.APPROVED
+    ) {
+      throw new BadRequestException(
+        `Registration cannot be cancelled (current status: ${registration.status})`,
+      );
+    }
+
+    // --- Gap-analysis Fix #4 — PRD §6.5 ---
+    // Cannot cancel after the registration deadline has passed.
+    const now = new Date();
+    if (registration.tournament.registrationDeadline <= now) {
+      throw new BadRequestException(
+        'Cannot cancel registration after the registration deadline has passed',
+      );
+    }
+
+    registration.status = RegistrationStatus.CANCELLED;
+    registration.reviewedAt = new Date();
+    return this.regs.save(registration);
   }
 }

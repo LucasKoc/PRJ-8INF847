@@ -1,38 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsString,
-  Matches,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsEnum, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { UserRole } from '../../../common/enums';
 
 export class RegisterDto {
-  @ApiProperty({ example: 'player@dpscheck.test' })
-  @IsEmail()
-  @MaxLength(255)
+  @ApiProperty({ example: 'alice@example.com' })
+  @IsEmail({}, { message: 'Email must be a valid email address' })
+  @MaxLength(254)
   email!: string;
 
-  @ApiProperty({ example: 'KC_NEXT_ADKING', minLength: 3, maxLength: 50 })
+  @ApiProperty({ example: 'alice_mid', minLength: 3, maxLength: 50 })
   @IsString()
   @MinLength(3)
   @MaxLength(50)
   @Matches(/^[A-Za-z0-9_-]+$/, {
-    message: 'username doit contenir uniquement des lettres, chiffres, _ ou -',
+    message: 'Username may only contain letters, numbers, _ and -',
   })
   username!: string;
 
-  @ApiProperty({ example: 'Caliste01!', minLength: 8 })
+  @ApiProperty({ example: 'Password123!', minLength: 8 })
   @IsString()
-  @MinLength(8)
-  @MaxLength(72)
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
+  @MaxLength(72, { message: 'Password must be at most 72 characters long' })
   password!: string;
 
   @ApiProperty({ enum: UserRole, example: UserRole.PLAYER })
-  @IsEnum(UserRole)
-  @IsNotEmpty()
+  @IsEnum(UserRole, { message: 'Role must be PLAYER or TO' })
   role!: UserRole;
 }
