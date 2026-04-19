@@ -1,0 +1,300 @@
+@import "tailwindcss";
+
+/* =============================================================================
+   DPSCHECK DESIGN SYSTEM
+   Precision-first esport dashboard — dark navy base, electric blue accent.
+   ========================================================================== */
+
+@theme {
+  /* ----- COLORS ----- */
+  --color-abyss:    #0D0E13;
+  --color-surface:  #141720;
+  --color-raised:   #1E2232;
+  --color-border:   #2D3352;
+  --color-ink:      #EDEEF2;
+  --color-muted:    #6B7295;
+  --color-ghost:    #3D4470;
+  --color-electric: #4A9BF5;
+  --color-electric-hover: #72B1F7;
+  --color-ice:      #C6DEFF;
+  --color-go:       #22D67A;
+  --color-alert:    #F5614A;
+  --color-gold:     #E8B84B;
+
+  /* ----- FONTS ----- */
+  --font-sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-display: "Syne", "Inter", sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+
+  /* ----- RADIUS ----- */
+  --radius-none: 0;
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+}
+
+/* =============================================================================
+   BASE
+   ========================================================================== */
+
+html {
+  color-scheme: dark;
+  background: var(--color-abyss);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--color-abyss);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Selection */
+::selection {
+  background: var(--color-electric);
+  color: var(--color-abyss);
+}
+
+/* Focus ring — accessibility first */
+:focus-visible {
+  outline: 2px solid var(--color-electric);
+  outline-offset: 2px;
+}
+
+/* Scrollbar — thin + branded */
+::-webkit-scrollbar         { width: 10px; height: 10px; }
+::-webkit-scrollbar-track   { background: var(--color-abyss); }
+::-webkit-scrollbar-thumb   { background: var(--color-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ghost); }
+
+/* Tabular-nums by default for numeric-heavy UIs */
+.tabular-nums,
+[data-numeric] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* =============================================================================
+   UTILITIES — design system shortcuts
+   ========================================================================== */
+
+@utility label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+  line-height: 1;
+}
+
+@utility tag-mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+@utility display-xl {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+@utility surface {
+  background: var(--color-surface);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+@utility hairline {
+  background: var(--color-border);
+  height: 0.5px;
+  width: 100%;
+}
+
+/* =============================================================================
+   STATUS PILL COLORS — semantic badges
+   Used on tournament status, registration status, captain flag.
+   ========================================================================== */
+
+.pill-open       { background: rgb(34  214 122 / 0.12); color: var(--color-go);       border: 0.5px solid rgb(34  214 122 / 0.35); }
+.pill-draft      { background: rgb(107 114 149 / 0.14); color: var(--color-muted);    border: 0.5px solid rgb(107 114 149 / 0.35); }
+.pill-closed     { background: rgb(74  155 245 / 0.12); color: var(--color-electric); border: 0.5px solid rgb(74  155 245 / 0.35); }
+.pill-cancelled  { background: rgb(245 97  74  / 0.12); color: var(--color-alert);    border: 0.5px solid rgb(245 97  74  / 0.35); }
+.pill-completed  { background: rgb(107 114 149 / 0.08); color: var(--color-muted);    border: 0.5px solid rgb(107 114 149 / 0.25); }
+.pill-captain    { background: rgb(232 184 75  / 0.14); color: var(--color-gold);     border: 0.5px solid rgb(232 184 75  / 0.35); }
+.pill-pending    { background: rgb(232 184 75  / 0.12); color: var(--color-gold);     border: 0.5px solid rgb(232 184 75  / 0.30); }
+.pill-approved   { background: rgb(34  214 122 / 0.12); color: var(--color-go);       border: 0.5px solid rgb(34  214 122 / 0.35); }
+.pill-rejected   { background: rgb(245 97  74  / 0.12); color: var(--color-alert);    border: 0.5px solid rgb(245 97  74  / 0.35); }
+
+/* =============================================================================
+   BUTTONS — used everywhere as `.btn .btn-primary .btn-md` etc.
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  border-radius: var(--radius-md);
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, opacity 0.12s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+}
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-sm { height: 32px; padding: 0 12px; font-size: 12px; }
+.btn-md { height: 40px; padding: 0 16px; font-size: 14px; }
+.btn-lg { height: 48px; padding: 0 20px; font-size: 15px; font-weight: 600; }
+
+.btn-primary {
+  background: var(--color-electric);
+  color: var(--color-abyss);
+  border: none;
+}
+.btn-primary:hover { background: var(--color-electric-hover); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-ink);
+  border: 0.5px solid var(--color-border);
+}
+.btn-secondary:hover {
+  background: var(--color-raised);
+  border-color: var(--color-ghost);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-muted);
+  border: none;
+}
+.btn-ghost:hover {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.btn-danger {
+  background: rgb(245 97 74 / 0.08);
+  color: var(--color-alert);
+  border: 0.5px solid rgb(245 97 74 / 0.30);
+}
+.btn-danger:hover {
+  background: rgb(245 97 74 / 0.15);
+  border-color: rgb(245 97 74 / 0.45);
+}
+
+/* =============================================================================
+   FORM INPUTS — dark-native with electric focus
+   ========================================================================== */
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-ink);
+  background: var(--color-raised);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  height: 40px;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+.textarea {
+  padding: 10px 12px;
+  height: auto;
+  min-height: 80px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7295'><path fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.4a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 18px;
+  padding-right: 36px;
+}
+.input::placeholder, .textarea::placeholder { color: var(--color-ghost); }
+.input:hover, .select:hover, .textarea:hover { border-color: var(--color-ghost); }
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: var(--color-electric);
+  background: var(--color-surface);
+}
+.input:disabled, .select:disabled, .textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Form field label/help layout */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  text-transform: uppercase;
+}
+.field-hint  { font-size: 12px; color: var(--color-muted); line-height: 1.4; }
+.field-error { font-size: 12px; color: var(--color-alert); line-height: 1.4; }
+
+/* =============================================================================
+   ANIMATIONS — subtle only, respect reduced-motion
+   ========================================================================== */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =============================================================================
+   TYPOGRAPHY ELEMENTS
+   ========================================================================== */
+
+h1, h2, h3, h4 { font-family: var(--font-sans); color: var(--color-ink); margin: 0; }
+h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em;  line-height: 1.15; }
+h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.2; }
+h3 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em;  line-height: 1.3; }
+
+a { color: var(--color-electric); text-decoration: none; }
+a:hover { color: var(--color-electric-hover); }

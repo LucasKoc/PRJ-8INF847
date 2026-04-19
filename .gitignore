@@ -61,3 +61,4 @@ baseline.json
 # Env
 .env
 dist/
+tsconfig.build.tsbuildinfo

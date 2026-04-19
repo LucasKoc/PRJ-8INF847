@@ -50,6 +50,19 @@ services:
     networks:
       - dpscheck_net
 
+  frontend:
+    build:
+      context: ./Frontend/
+      dockerfile: Dockerfile
+    container_name: dpscheck_frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${FRONTEND_PORT:-4200}:80"
+    networks:
+      - dpscheck_net
+
 volumes:
   dpscheck_pgdata:
 

@@ -274,8 +274,9 @@ CREATE TABLE tournament_registrations
     status        registration_status NOT NULL DEFAULT 'PENDING',
     registered_at TIMESTAMPTZ         NOT NULL DEFAULT NOW(),
     reviewed_at   TIMESTAMPTZ,
-    reviewed_by   BIGINT              REFERENCES users (id) ON DELETE SET NULL,
+    reviewed_by_user_id   BIGINT              REFERENCES users (id) ON DELETE SET NULL,
     review_note   TEXT,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT uq_tournament_team UNIQUE (tournament_id, team_id),
     CONSTRAINT chk_registration_review CHECK (
         (status = 'PENDING' AND reviewed_at IS NULL)
@@ -292,18 +293,18 @@ $$
 DECLARE
     user_role_value user_role;
 BEGIN
-    IF NEW.reviewed_by IS NULL THEN
+    IF NEW.reviewed_by_user_id IS NULL THEN
         RETURN NEW;
     END IF;
 
-    SELECT role INTO user_role_value FROM users WHERE id = NEW.reviewed_by;
+    SELECT role INTO user_role_value FROM users WHERE id = NEW.reviewed_by_user_id;
 
     IF user_role_value IS NULL THEN
-        RAISE EXCEPTION 'Reviewer user % does not exist', NEW.reviewed_by;
+        RAISE EXCEPTION 'Reviewer user % does not exist', NEW.reviewed_by_user_id;
     END IF;
 
     IF user_role_value <> 'TO' THEN
-        RAISE EXCEPTION 'Only a TO can review a registration. User % has role %', NEW.reviewed_by, user_role_value;
+        RAISE EXCEPTION 'Only a TO can review a registration. User % has role %', NEW.reviewed_by_user_id, user_role_value;
     END IF;
 
     RETURN NEW;

@@ -10,11 +10,12 @@ import { DataSource, Repository } from 'typeorm';
 import { Team } from '../../entities/team.entity';
 import { TeamMember } from '../../entities/team-member.entity';
 import { User } from '../../entities/user.entity';
-import { MemberStatus, UserRole } from '../../common/enums';
+import {LolRole, MemberStatus, UserRole} from '../../common/enums';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { AddTeamMemberDto } from './dto/add-team-member.dto';
 import { UpdateTeamMemberDto } from './dto/update-team-member.dto';
+import {PlayerProfile} from "../../entities/player-profile.entity";
 
 @Injectable()
 export class TeamsService {
@@ -22,6 +23,7 @@ export class TeamsService {
     @InjectRepository(Team) private readonly teams: Repository<Team>,
     @InjectRepository(TeamMember) private readonly members: Repository<TeamMember>,
     @InjectRepository(User) private readonly users: Repository<User>,
+    @InjectRepository(PlayerProfile) private readonly profiles: Repository<PlayerProfile>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -64,7 +66,6 @@ export class TeamsService {
       throw new BadRequestException('Only PLAYER accounts can create a team');
     }
 
-    // Captain cannot already be ACTIVE on another team
     const existingActive = await this.members.findOne({
       where: { userId: captainId, status: MemberStatus.ACTIVE },
     });
@@ -72,9 +73,11 @@ export class TeamsService {
       throw new ConflictException('You are already an active member of another team');
     }
 
-    // Persist team + captain membership in one transaction.
-    // Captain's LoL role defaults to FLEX — they can update it via members endpoint.
-    return this.dataSource.transaction(async manager => {
+    // Retrieve the captain's main role from their player profile (fallback to FLEX)
+    const profile = await this.profiles.findOne({ where: { userId: captainId } });
+    const captainRole: LolRole = profile?.mainRole ?? LolRole.FLEX;
+
+    const savedTeam = await this.dataSource.transaction(async (manager) => {
       const team = manager.create(Team, {
         name: dto.name.trim(),
         tag: dto.tag.toUpperCase(),
@@ -85,14 +88,16 @@ export class TeamsService {
       const membership = manager.create(TeamMember, {
         teamId: saved.id,
         userId: captainId,
-        role: 'FLEX' as never,
+        role: captainRole,
         isSubstitute: false,
         status: MemberStatus.ACTIVE,
       });
       await manager.save(membership);
 
-      return this.findOne(saved.id);
+      return saved;
     });
+
+    return this.findOne(savedTeam.id);
   }
 
   async update(id: string, userId: number | string, dto: UpdateTeamDto): Promise<Team> {
@@ -129,9 +134,9 @@ export class TeamsService {
   }
 
   async addMember(
-    teamId: string,
-    captainUserId: number | string,
-    dto: AddTeamMemberDto,
+      teamId: string,
+      captainUserId: number | string,
+      dto: AddTeamMemberDto,
   ): Promise<TeamMember> {
     const team = await this.assertTeamExists(teamId);
     if (team.captainUserId !== String(captainUserId)) {
@@ -144,6 +149,7 @@ export class TeamsService {
       throw new BadRequestException('Only PLAYER accounts can be added to a team');
     }
 
+    // Check if this user is currently ACTIVE on any team (enforced globally)
     const activeElsewhere = await this.members.findOne({
       where: { userId: dto.userId, status: MemberStatus.ACTIVE },
     });
@@ -151,6 +157,25 @@ export class TeamsService {
       throw new ConflictException('This player is already active on another team');
     }
 
+    // Check for an existing membership on THIS team (could be REMOVED, LEFT, or theoretically ACTIVE)
+    const existing = await this.members.findOne({
+      where: { teamId, userId: dto.userId },
+    });
+
+    if (existing) {
+      // Defensive check — shouldn't happen after the activeElsewhere guard above
+      if (existing.status === MemberStatus.ACTIVE) {
+        throw new ConflictException('This player is already a member of this team');
+      }
+      // Resurrect the previous membership instead of inserting a new row
+      existing.status = MemberStatus.ACTIVE;
+      existing.role = dto.role;
+      existing.isSubstitute = dto.isSubstitute ?? false;
+      existing.leftAt = null;
+      return this.members.save(existing);
+    }
+
+    // Fresh membership
     const membership = this.members.create({
       teamId,
       userId: dto.userId,

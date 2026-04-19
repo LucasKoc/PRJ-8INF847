@@ -7,7 +7,6 @@ dist
 .idea
 *.log
 coverage
-/out-tsc
 README.md
 Dockerfile
 .dockerignore

@@ -15,7 +15,6 @@ async function bootstrap() {
   const corsOrigin = config.get<string>('CORS_ORIGIN', 'http://localhost:4200');
 
   app.setGlobalPrefix(prefix);
-  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
 
   app.use(helmet({ contentSecurityPolicy: false }));
 
