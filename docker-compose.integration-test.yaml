@@ -1,6 +1,8 @@
 services:
   postgres-test:
-    image: postgres:16-alpine
+    build:
+      context: ./Backend/sql
+      dockerfile: Dockerfile
     container_name: dpscheck_postgres_test
     restart: unless-stopped
     environment:
@@ -11,8 +13,8 @@ services:
       # Port 5433 test
       - "5433:5432"
     volumes:
-      - dpscheck_pgdata_test:/var/lib/postgresql/data
-      - ./Backend/sql/dpscheck_schema_pgsql.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - type: tmpfs
+        target: /var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U dpscheck_test -d dpscheck_test" ]
       interval: 3s
@@ -20,9 +22,6 @@ services:
       retries: 10
     networks:
       - dpscheck_test_net
-
-volumes:
-  dpscheck_pgdata_test:
 
 networks:
   dpscheck_test_net:

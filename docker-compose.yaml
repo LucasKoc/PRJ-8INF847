@@ -1,6 +1,8 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: ./Backend/sql
+      dockerfile: Dockerfile
     container_name: dpscheck_postgres
     restart: unless-stopped
     environment:
@@ -11,8 +13,6 @@ services:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - dpscheck_pgdata:/var/lib/postgresql/data
-      - ./Backend/sql/dpscheck_schema_pgsql.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./Backend/sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-dpscheck} -d ${DB_NAME:-dpscheck}"]
       interval: 5s

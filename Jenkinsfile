@@ -116,7 +116,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 4 — Tests unitaires (avec couverture)
         // ====================================================================
-        stage('Tests unitaires') {
+        stage('Unit tests') {
             steps {
                 dir('Backend') {
                     sh 'npm run test:cov'
@@ -140,17 +140,23 @@ pipeline {
         // ====================================================================
         // ÉTAPE 5 — Tests d'intégration (BDD test isolée sur port 5433)
         // ====================================================================
-        stage("Tests d'intégration") {
+        stage("Integration tests") {
             steps {
+                sh 'docker compose -f docker-compose.integration-test.yaml down -v || true'
                 sh 'docker compose -f docker-compose.integration-test.yaml up -d'
-                // Polling pour attendre que Postgres accepte les connexions
+
+                // Attendre que le SCHÉMA soit prêt (pas seulement TCP)
                 sh '''
-                    for i in $(seq 1 30); do
-                        if docker exec dpscheck_postgres_test pg_isready -U dpscheck_test 2>/dev/null; then
-                            echo "Postgres de test prêt"
+                    for i in $(seq 1 40); do
+                        if docker exec dpscheck_postgres_test \
+                            psql -U dpscheck_test -d dpscheck_test \
+                            -c "SELECT 1 FROM player_profiles LIMIT 1" \
+                            > /dev/null 2>&1; then
+                            echo "Schéma PostgreSQL prêt"
                             break
                         fi
-                        sleep 2
+                        echo "Attente du schéma... ($i/40)"
+                        sleep 3
                     done
                 '''
                 dir('Backend') {
@@ -169,27 +175,32 @@ pipeline {
         // ====================================================================
         // ÉTAPE 6 — Tests fonctionnels (Selenium sur stack dédiée port 4201)
         // ====================================================================
-        stage('Tests fonctionnels') {
+        stage('Functionnal tests') {
             steps {
+                sh 'docker compose -f docker-compose.selenium.yaml down -v || true'
+
                 sh 'docker compose -f docker-compose.selenium.yaml up -d --build'
                 // Attend que le frontend Selenium réponde
                 sh '''
                     for i in $(seq 1 40); do
-                        if curl -sf http://localhost:4201 > /dev/null 2>&1; then
+                        if curl -sf http://host.docker.internal:4201 > /dev/null 2>&1; then
                             echo "Stack Selenium prête"
                             break
                         fi
+                        echo "Attente stack Selenium... ($i/40)"
                         sleep 3
                     done
                 '''
+
                 dir('Selenium') {
                     sh 'npm ci --prefer-offline --no-audit'
-                    sh 'HEADLESS=true npm test'
-                }
-            }
-            post {
-                always {
-                    sh 'docker compose -f docker-compose.selenium.yaml down -v || true'
+                    withEnv([
+                        'BASE_URL=http://host.docker.internal:4201',
+                        'API_URL=http://host.docker.internal:3001/api',
+                        'HEADLESS=true'
+                    ]) {
+                        sh 'npm test'
+                    }
                 }
             }
         }
