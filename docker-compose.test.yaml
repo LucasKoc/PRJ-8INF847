@@ -1,0 +1,29 @@
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: dpscheck_postgres_test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dpscheck_test
+      POSTGRES_PASSWORD: test_pwd
+      POSTGRES_DB: dpscheck_test
+    ports:
+      # Port 5433 test
+      - "5433:5432"
+    volumes:
+      - dpscheck_pgdata_test:/var/lib/postgresql/data
+      - ./Backend/sql/dpscheck_schema_pgsql.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U dpscheck_test -d dpscheck_test" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    networks:
+      - dpscheck_test_net
+
+volumes:
+  dpscheck_pgdata_test:
+
+networks:
+  dpscheck_test_net:
+    driver: bridge
