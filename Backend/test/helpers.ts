@@ -60,7 +60,7 @@ export async function createTestApp(): Promise<INestApplication> {
  */
 export async function truncateAllTables(app: INestApplication): Promise<void> {
   const dataSource = app.get(DataSource);
-  const tables = dataSource.entityMetadatas.map((m) => `"${m.tableName}"`).join(', ');
+  const tables = dataSource.entityMetadatas.map(m => `"${m.tableName}"`).join(', ');
   await dataSource.query(`TRUNCATE ${tables} RESTART IDENTITY CASCADE`);
 }
 

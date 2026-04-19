@@ -197,7 +197,7 @@ describe('Registrations (intégration)', () => {
       expect(res.body.reviewedAt).toBeDefined();
     });
 
-    it("[NOMINAL] le TO devrait pouvoir REJETER avec une note de justification", async () => {
+    it('[NOMINAL] le TO devrait pouvoir REJETER avec une note de justification', async () => {
       const res = await request(app.getHttpServer())
         .patch(`/api/registrations/${inscriptionId}/review`)
         .set(bearer(organisateur))

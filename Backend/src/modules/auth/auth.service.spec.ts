@@ -40,16 +40,16 @@ describe('AuthService (unitaire)', () => {
 
   // Fabrique d'utilisateur simulé réutilisable dans tous les tests
   const mockUtilisateur = (surcharges: Partial<User> = {}): User =>
-      ({
-        id: '1',
-        email: 'alice@dpscheck.local',
-        username: 'alice_mid',
-        passwordHash: '$2b$10$hashedpwd',
-        role: UserRole.PLAYER,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ...surcharges,
-      }) as User;
+    ({
+      id: '1',
+      email: 'alice@dpscheck.local',
+      username: 'alice_mid',
+      passwordHash: '$2b$10$hashedpwd',
+      role: UserRole.PLAYER,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...surcharges,
+    }) as User;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -93,7 +93,7 @@ describe('AuthService (unitaire)', () => {
     it('[NOMINAL] devrait créer un nouvel utilisateur et retourner un JWT signé', async () => {
       // Arrange — aucun doublon en base
       userRepository.findOne.mockResolvedValue(null);
-      userRepository.create.mockImplementation((dto) => dto as User);
+      userRepository.create.mockImplementation(dto => dto as User);
       userRepository.save.mockResolvedValue(mockUtilisateur());
 
       // Act
@@ -110,20 +110,20 @@ describe('AuthService (unitaire)', () => {
       });
       expect(userRepository.save).toHaveBeenCalledTimes(1);
       expect(jwtService.sign).toHaveBeenCalledWith(
-          expect.objectContaining({ username: 'alice_mid', role: UserRole.PLAYER }),
+        expect.objectContaining({ username: 'alice_mid', role: UserRole.PLAYER }),
       );
     });
 
     it("[ERREUR] devrait lever ConflictException si l'adresse email est déjà utilisée", async () => {
       // Arrange — le repository retourne un utilisateur existant avec le même email
       userRepository.findOne.mockResolvedValue(
-          mockUtilisateur({ email: dtoValide.email } as Partial<User>),
+        mockUtilisateur({ email: dtoValide.email } as Partial<User>),
       );
 
       // Act & Assert
       await expect(service.register(dtoValide)).rejects.toThrow(ConflictException);
       await expect(service.register(dtoValide)).rejects.toThrow(
-          /account with this email already exists/i,
+        /account with this email already exists/i,
       );
       // Le save ne doit jamais être appelé si un doublon est détecté
       expect(userRepository.save).not.toHaveBeenCalled();

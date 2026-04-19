@@ -1,8 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -11,11 +8,7 @@ import { TeamsService } from '../teams/teams.service';
 import { TournamentRegistration } from '../../entities/tournament-registration.entity';
 import { Tournament } from '../../entities/tournament.entity';
 import { Team } from '../../entities/team.entity';
-import {
-  RegistrationStatus,
-  TournamentFormat,
-  TournamentStatus,
-} from '../../common/enums';
+import { RegistrationStatus, TournamentFormat, TournamentStatus } from '../../common/enums';
 
 /**
  * Tests unitaires — RegistrationsService
@@ -37,35 +30,35 @@ describe('RegistrationsService (unitaire)', () => {
 
   // ---------- Données de test ----------
   const dateFuture = () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // +7 jours
-  const datePassee = () => new Date(Date.now() - 24 * 60 * 60 * 1000);      // -1 jour
+  const datePassee = () => new Date(Date.now() - 24 * 60 * 60 * 1000); // -1 jour
 
   const mockTournoi = (surcharges: Partial<Tournament> = {}): Tournament =>
-      ({
-        id: '1',
-        organizerUserId: '10',
-        name: 'Spring Cup 2026',
-        game: 'League of Legends',
-        format: TournamentFormat.BO1,
-        registrationDeadline: dateFuture(),
-        startsAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        maxTeams: 8,
-        status: TournamentStatus.OPEN,
-        ...surcharges,
-      }) as Tournament;
+    ({
+      id: '1',
+      organizerUserId: '10',
+      name: 'Spring Cup 2026',
+      game: 'League of Legends',
+      format: TournamentFormat.BO1,
+      registrationDeadline: dateFuture(),
+      startsAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      maxTeams: 8,
+      status: TournamentStatus.OPEN,
+      ...surcharges,
+    }) as Tournament;
 
   const mockEquipe = (surcharges: Partial<Team> = {}): Team =>
-      ({ id: '100', name: 'Phoenix', tag: 'PHX', captainUserId: '20', ...surcharges }) as Team;
+    ({ id: '100', name: 'Phoenix', tag: 'PHX', captainUserId: '20', ...surcharges }) as Team;
 
   const mockInscription = (
-      surcharges: Partial<TournamentRegistration> = {},
+    surcharges: Partial<TournamentRegistration> = {},
   ): TournamentRegistration =>
-      ({
-        id: '500',
-        tournamentId: '1',
-        teamId: '100',
-        status: RegistrationStatus.PENDING,
-        ...surcharges,
-      }) as TournamentRegistration;
+    ({
+      id: '500',
+      tournamentId: '1',
+      teamId: '100',
+      status: RegistrationStatus.PENDING,
+      ...surcharges,
+    }) as TournamentRegistration;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -112,11 +105,11 @@ describe('RegistrationsService (unitaire)', () => {
       tournamentsRepo.findOne.mockResolvedValue(mockTournoi());
       teamsRepo.findOne.mockResolvedValue(mockEquipe());
       teamsService.countActiveStarters.mockResolvedValue(5); // exactement le minimum requis
-      regsRepo.findOne.mockResolvedValue(null);              // pas encore inscrit
-      regsRepo.count.mockResolvedValue(2);                   // 2 équipes sur 8 déjà inscrites
-      regsRepo.create.mockImplementation((dto) => dto as TournamentRegistration);
-      regsRepo.save.mockImplementation((r) =>
-          Promise.resolve({ ...r, id: '500' } as TournamentRegistration),
+      regsRepo.findOne.mockResolvedValue(null); // pas encore inscrit
+      regsRepo.count.mockResolvedValue(2); // 2 équipes sur 8 déjà inscrites
+      regsRepo.create.mockImplementation(dto => dto as TournamentRegistration);
+      regsRepo.save.mockImplementation(r =>
+        Promise.resolve({ ...r, id: '500' } as TournamentRegistration),
       );
 
       // Act
@@ -135,7 +128,7 @@ describe('RegistrationsService (unitaire)', () => {
       // Act & Assert
       await expect(service.register('1', '100', '20')).rejects.toThrow(BadRequestException);
       await expect(service.register('1', '100', '20')).rejects.toThrow(
-          /registration deadline has passed/i,
+        /registration deadline has passed/i,
       );
       expect(regsRepo.save).not.toHaveBeenCalled();
     });
@@ -149,7 +142,7 @@ describe('RegistrationsService (unitaire)', () => {
       // Act & Assert
       await expect(service.register('1', '100', '20')).rejects.toThrow(BadRequestException);
       await expect(service.register('1', '100', '20')).rejects.toThrow(
-          /3 of 5 required active starters/i,
+        /3 of 5 required active starters/i,
       );
     });
   });
@@ -165,7 +158,7 @@ describe('RegistrationsService (unitaire)', () => {
         tournament: mockTournoi(),
       });
       regsRepo.findOne.mockResolvedValue(inscription);
-      regsRepo.save.mockImplementation((r) => Promise.resolve(r as TournamentRegistration));
+      regsRepo.save.mockImplementation(r => Promise.resolve(r as TournamentRegistration));
 
       // Act
       const resultat = await service.cancel('500', '20');
@@ -186,7 +179,7 @@ describe('RegistrationsService (unitaire)', () => {
       // Act & Assert
       await expect(service.cancel('500', '20')).rejects.toThrow(BadRequestException);
       await expect(service.cancel('500', '20')).rejects.toThrow(
-          /cannot cancel registration after the registration deadline/i,
+        /cannot cancel registration after the registration deadline/i,
       );
     });
 
@@ -213,7 +206,7 @@ describe('RegistrationsService (unitaire)', () => {
         tournament: mockTournoi({ organizerUserId: '10' }),
       });
       regsRepo.findOne.mockResolvedValue(inscription);
-      regsRepo.save.mockImplementation((r) => Promise.resolve(r as TournamentRegistration));
+      regsRepo.save.mockImplementation(r => Promise.resolve(r as TournamentRegistration));
 
       // Act
       const resultat = await service.review('500', '10', {
@@ -235,10 +228,10 @@ describe('RegistrationsService (unitaire)', () => {
 
       // Act & Assert
       await expect(
-          service.review('500', '10', { status: RegistrationStatus.REJECTED }),
+        service.review('500', '10', { status: RegistrationStatus.REJECTED }),
       ).rejects.toThrow(BadRequestException);
       await expect(
-          service.review('500', '10', { status: RegistrationStatus.REJECTED }),
+        service.review('500', '10', { status: RegistrationStatus.REJECTED }),
       ).rejects.toThrow(/already been reviewed/i);
     });
   });

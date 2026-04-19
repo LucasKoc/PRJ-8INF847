@@ -136,14 +136,12 @@ describe('Tournaments (intégration)', () => {
         .expect(201);
 
       // Visiteur non authentifié : liste vide
-      const res = await request(app.getHttpServer())
-        .get('/api/tournaments')
-        .expect(200);
+      const res = await request(app.getHttpServer()).get('/api/tournaments').expect(200);
 
       expect(res.body).toHaveLength(0);
     });
 
-    it("[NOMINAL] un TO voit ses propres tournois DRAFT dans la liste", async () => {
+    it('[NOMINAL] un TO voit ses propres tournois DRAFT dans la liste', async () => {
       await request(app.getHttpServer())
         .post('/api/tournaments')
         .set(bearer(organisateur))

@@ -10,12 +10,12 @@ import { DataSource, Repository } from 'typeorm';
 import { Team } from '../../entities/team.entity';
 import { TeamMember } from '../../entities/team-member.entity';
 import { User } from '../../entities/user.entity';
-import {LolRole, MemberStatus, UserRole} from '../../common/enums';
+import { LolRole, MemberStatus, UserRole } from '../../common/enums';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { AddTeamMemberDto } from './dto/add-team-member.dto';
 import { UpdateTeamMemberDto } from './dto/update-team-member.dto';
-import {PlayerProfile} from "../../entities/player-profile.entity";
+import { PlayerProfile } from '../../entities/player-profile.entity';
 
 @Injectable()
 export class TeamsService {
@@ -77,7 +77,7 @@ export class TeamsService {
     const profile = await this.profiles.findOne({ where: { userId: captainId } });
     const captainRole: LolRole = profile?.mainRole ?? LolRole.FLEX;
 
-    const savedTeam = await this.dataSource.transaction(async (manager) => {
+    const savedTeam = await this.dataSource.transaction(async manager => {
       const team = manager.create(Team, {
         name: dto.name.trim(),
         tag: dto.tag.toUpperCase(),
@@ -134,9 +134,9 @@ export class TeamsService {
   }
 
   async addMember(
-      teamId: string,
-      captainUserId: number | string,
-      dto: AddTeamMemberDto,
+    teamId: string,
+    captainUserId: number | string,
+    dto: AddTeamMemberDto,
   ): Promise<TeamMember> {
     const team = await this.assertTeamExists(teamId);
     if (team.captainUserId !== String(captainUserId)) {

@@ -5,7 +5,7 @@ import { TeamMember } from '../../entities/team-member.entity';
 import { User } from '../../entities/user.entity';
 import { TeamsController } from './teams.controller';
 import { TeamsService } from './teams.service';
-import {PlayerProfile} from "../../entities/player-profile.entity";
+import { PlayerProfile } from '../../entities/player-profile.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Team, TeamMember, User, PlayerProfile])],

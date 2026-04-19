@@ -141,7 +141,7 @@ describe('Auth (intégration)', () => {
     it("[ERREUR] devrait retourner 401 Unauthorized si l'utilisateur n'existe pas", async () => {
       await request(app.getHttpServer())
         .post('/api/auth/login')
-        .send({ identifier: 'inconnu@nowhere.local', password: 'N\'importeQuoi123!' })
+        .send({ identifier: 'inconnu@nowhere.local', password: "N'importeQuoi123!" })
         .expect(401);
     });
   });

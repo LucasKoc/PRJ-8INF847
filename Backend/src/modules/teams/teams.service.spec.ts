@@ -1,9 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
@@ -36,28 +32,28 @@ describe('TeamsService (unitaire)', () => {
 
   // ---------- Données de test ----------
   const mockEquipe = (surcharges: Partial<Team> = {}): Team =>
-      ({ id: '1', name: 'Phoenix', tag: 'PHX', captainUserId: '20', ...surcharges }) as Team;
+    ({ id: '1', name: 'Phoenix', tag: 'PHX', captainUserId: '20', ...surcharges }) as Team;
 
   const mockUtilisateur = (surcharges: Partial<User> = {}): User =>
-      ({
-        id: '30',
-        email: 'bob@dpscheck.local',
-        username: 'bob_top',
-        passwordHash: 'hash',
-        role: UserRole.PLAYER,
-        ...surcharges,
-      }) as User;
+    ({
+      id: '30',
+      email: 'bob@dpscheck.local',
+      username: 'bob_top',
+      passwordHash: 'hash',
+      role: UserRole.PLAYER,
+      ...surcharges,
+    }) as User;
 
   const mockMembre = (surcharges: Partial<TeamMember> = {}): TeamMember =>
-      ({
-        id: '500',
-        teamId: '1',
-        userId: '30',
-        role: LolRole.TOP,
-        isSubstitute: false,
-        status: MemberStatus.ACTIVE,
-        ...surcharges,
-      }) as TeamMember;
+    ({
+      id: '500',
+      teamId: '1',
+      userId: '30',
+      role: LolRole.TOP,
+      isSubstitute: false,
+      status: MemberStatus.ACTIVE,
+      ...surcharges,
+    }) as TeamMember;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -112,10 +108,8 @@ describe('TeamsService (unitaire)', () => {
       usersRepo.findOne.mockResolvedValue(mockUtilisateur());
       // Pas de membership actif existant, ni dans cette équipe ni ailleurs
       membersRepo.findOne.mockResolvedValue(null);
-      membersRepo.create.mockImplementation((dto) => dto as TeamMember);
-      membersRepo.save.mockImplementation((m) =>
-          Promise.resolve({ ...m, id: '500' } as TeamMember),
-      );
+      membersRepo.create.mockImplementation(dto => dto as TeamMember);
+      membersRepo.save.mockImplementation(m => Promise.resolve({ ...m, id: '500' } as TeamMember));
 
       // Act
       const resultat = await service.addMember('1', '20', ajoutDto);
@@ -132,7 +126,7 @@ describe('TeamsService (unitaire)', () => {
       // Act & Assert
       await expect(service.addMember('1', '99', ajoutDto)).rejects.toThrow(ForbiddenException);
       await expect(service.addMember('1', '99', ajoutDto)).rejects.toThrow(
-          /only the team captain/i,
+        /only the team captain/i,
       );
     });
 
@@ -143,23 +137,21 @@ describe('TeamsService (unitaire)', () => {
 
       // Act & Assert
       await expect(service.addMember('1', '20', ajoutDto)).rejects.toThrow(BadRequestException);
-      await expect(service.addMember('1', '20', ajoutDto)).rejects.toThrow(
-          /only PLAYER accounts/i,
-      );
+      await expect(service.addMember('1', '20', ajoutDto)).rejects.toThrow(/only PLAYER accounts/i);
     });
 
-    it("[ERREUR] devrait lever ConflictException si le joueur est déjà actif dans une autre équipe", async () => {
+    it('[ERREUR] devrait lever ConflictException si le joueur est déjà actif dans une autre équipe', async () => {
       // Arrange — le joueur appartient déjà à l'équipe 99
       teamsRepo.findOne.mockResolvedValue(mockEquipe());
       usersRepo.findOne.mockResolvedValue(mockUtilisateur());
       membersRepo.findOne.mockResolvedValue(
-          mockMembre({ teamId: '99', status: MemberStatus.ACTIVE }),
+        mockMembre({ teamId: '99', status: MemberStatus.ACTIVE }),
       );
 
       // Act & Assert
       await expect(service.addMember('1', '20', ajoutDto)).rejects.toThrow(ConflictException);
       await expect(service.addMember('1', '20', ajoutDto)).rejects.toThrow(
-          /already active on another team/i,
+        /already active on another team/i,
       );
     });
   });
@@ -172,15 +164,15 @@ describe('TeamsService (unitaire)', () => {
       // Arrange
       teamsRepo.findOne.mockResolvedValue(mockEquipe({ captainUserId: '20' }));
       membersRepo.findOne.mockResolvedValue(mockMembre({ userId: '30' }));
-      membersRepo.save.mockImplementation((m) => Promise.resolve(m as TeamMember));
+      membersRepo.save.mockImplementation(m => Promise.resolve(m as TeamMember));
 
       // Act & Assert — la méthode ne retourne rien (void)
       await expect(service.removeMember('1', '500', '20')).resolves.toBeUndefined();
       expect(membersRepo.save).toHaveBeenCalledWith(
-          expect.objectContaining({
-            status: MemberStatus.REMOVED,
-            leftAt: expect.any(Date),
-          }),
+        expect.objectContaining({
+          status: MemberStatus.REMOVED,
+          leftAt: expect.any(Date),
+        }),
       );
     });
 
@@ -192,7 +184,7 @@ describe('TeamsService (unitaire)', () => {
       // Act & Assert
       await expect(service.removeMember('1', '500', '20')).rejects.toThrow(BadRequestException);
       await expect(service.removeMember('1', '500', '20')).rejects.toThrow(
-          /captain cannot remove themselves/i,
+        /captain cannot remove themselves/i,
       );
     });
   });

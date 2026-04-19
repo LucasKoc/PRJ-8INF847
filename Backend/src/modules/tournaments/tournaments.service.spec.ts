@@ -25,19 +25,19 @@ describe('TournamentsService (unitaire)', () => {
 
   // ---------- Données de test ----------
   const mockTournoi = (surcharges: Partial<Tournament> = {}): Tournament =>
-      ({
-        id: '1',
-        organizerUserId: '10',
-        name: 'Spring Cup 2026',
-        game: 'League of Legends',
-        format: TournamentFormat.BO1,
-        registrationDeadline: new Date('2026-05-15'),
-        startsAt: new Date('2026-05-20'),
-        endsAt: null,
-        maxTeams: 8,
-        status: TournamentStatus.DRAFT,
-        ...surcharges,
-      }) as Tournament;
+    ({
+      id: '1',
+      organizerUserId: '10',
+      name: 'Spring Cup 2026',
+      game: 'League of Legends',
+      format: TournamentFormat.BO1,
+      registrationDeadline: new Date('2026-05-15'),
+      startsAt: new Date('2026-05-20'),
+      endsAt: null,
+      maxTeams: 8,
+      status: TournamentStatus.DRAFT,
+      ...surcharges,
+    }) as Tournament;
 
   beforeEach(async () => {
     // Faux QueryBuilder chainable — simule le comportement de createQueryBuilder()
@@ -81,8 +81,8 @@ describe('TournamentsService (unitaire)', () => {
       // Assert
       expect(resultat).toHaveLength(1);
       expect(queryBuilder.where).toHaveBeenCalledWith(
-          't.status != :draft',
-          expect.objectContaining({ draft: TournamentStatus.DRAFT }),
+        't.status != :draft',
+        expect.objectContaining({ draft: TournamentStatus.DRAFT }),
       );
     });
 
@@ -99,8 +99,8 @@ describe('TournamentsService (unitaire)', () => {
       // Assert
       expect(resultat).toHaveLength(2);
       expect(queryBuilder.where).toHaveBeenCalledWith(
-          '(t.status != :draft OR t.organizerUserId = :me)',
-          expect.objectContaining({ draft: TournamentStatus.DRAFT, me: '10' }),
+        '(t.status != :draft OR t.organizerUserId = :me)',
+        expect.objectContaining({ draft: TournamentStatus.DRAFT, me: '10' }),
       );
     });
   });
@@ -119,8 +119,8 @@ describe('TournamentsService (unitaire)', () => {
 
     it('[NOMINAL] devrait créer un tournoi en statut BROUILLON si les dates sont valides', async () => {
       // Arrange
-      repository.create.mockImplementation((dto) => ({ ...dto, id: '1' }) as Tournament);
-      repository.save.mockImplementation((t) => Promise.resolve(t as Tournament));
+      repository.create.mockImplementation(dto => ({ ...dto, id: '1' }) as Tournament);
+      repository.save.mockImplementation(t => Promise.resolve(t as Tournament));
 
       // Act
       const resultat = await service.create('10', dtoValide);
@@ -142,7 +142,7 @@ describe('TournamentsService (unitaire)', () => {
       // Act & Assert
       await expect(service.create('10', dtoInvalide)).rejects.toThrow(BadRequestException);
       await expect(service.create('10', dtoInvalide)).rejects.toThrow(
-          /deadline must precede the start date/i,
+        /deadline must precede the start date/i,
       );
       expect(repository.save).not.toHaveBeenCalled();
     });
@@ -156,7 +156,7 @@ describe('TournamentsService (unitaire)', () => {
       // Arrange
       const tournoi = mockTournoi({ status: TournamentStatus.DRAFT });
       repository.findOne.mockResolvedValue(tournoi);
-      repository.save.mockImplementation((x) => Promise.resolve(x as Tournament));
+      repository.save.mockImplementation(x => Promise.resolve(x as Tournament));
 
       // Act
       const resultat = await service.changeStatus('1', '10', TournamentStatus.OPEN);
@@ -171,12 +171,12 @@ describe('TournamentsService (unitaire)', () => {
       repository.findOne.mockResolvedValue(tournoi);
 
       // Act & Assert
-      await expect(
-          service.changeStatus('1', '10', TournamentStatus.DRAFT),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-          service.changeStatus('1', '10', TournamentStatus.DRAFT),
-      ).rejects.toThrow(/cannot transition from OPEN to DRAFT/i);
+      await expect(service.changeStatus('1', '10', TournamentStatus.DRAFT)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.changeStatus('1', '10', TournamentStatus.DRAFT)).rejects.toThrow(
+        /cannot transition from OPEN to DRAFT/i,
+      );
     });
 
     it("[ERREUR] devrait lever ForbiddenException si l'appelant n'est pas l'organisateur du tournoi", async () => {
@@ -185,9 +185,9 @@ describe('TournamentsService (unitaire)', () => {
       repository.findOne.mockResolvedValue(tournoi);
 
       // Act & Assert
-      await expect(
-          service.changeStatus('1', '99', TournamentStatus.OPEN),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.changeStatus('1', '99', TournamentStatus.OPEN)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 });
