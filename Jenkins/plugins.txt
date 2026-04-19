@@ -1,0 +1,37 @@
+# Plugins Jenkins — DPSCHECK
+
+# ---------- Pipeline & workflow ----------
+workflow-aggregator
+pipeline-stage-view
+pipeline-graph-view
+blueocean
+
+# ---------- SCM ----------
+git
+github
+github-branch-source
+
+# ---------- Credentials ----------
+credentials-binding
+ssh-credentials
+plain-credentials
+
+# ---------- Docker ----------
+docker-workflow
+docker-plugin
+
+# ---------- Tests & rapports ----------
+junit
+cobertura
+htmlpublisher
+
+# ---------- SonarQube ----------
+sonar
+
+# ---------- Affichage ----------
+ansicolor
+timestamper
+ws-cleanup
+
+# ---------- Configuration ----------
+configuration-as-code

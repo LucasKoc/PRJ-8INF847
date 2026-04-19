@@ -51,3 +51,11 @@ export SONAR_TOKEN=sqa_9750aa2022808896910dc7a0e53f48711e1187d0
 # docker compose -f docker-compose.sonarqube.yaml down
 ```
 
+## Jenkins
+
+```bash
+docker compose -f docker-compose.jenkins.yaml up -d --build
+
+# http://localhost:8080 -> Get admin password -> Install suggested plugins -> Create first admin user
+# docker compose -f docker-compose.jenkins.yaml down
+```

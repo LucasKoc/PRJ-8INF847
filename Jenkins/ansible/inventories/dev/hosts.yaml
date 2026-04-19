@@ -1,0 +1,16 @@
+# Inventaire Ansible — Environnement DEV (local)
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
+  children:
+    dpscheck_servers:
+      hosts:
+        localhost:
+      vars:
+        api_port: 3000
+        frontend_port: 4200
+        db_port: 5432
+        db_password: devpwd
+        jwt_secret: dev_secret_change_me

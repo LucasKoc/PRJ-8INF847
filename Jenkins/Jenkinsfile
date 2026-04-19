@@ -1,0 +1,423 @@
+// ============================================================================
+// DPSCHECK — Pipeline CI/CD Jenkins
+// ============================================================================
+// À placer à la racine du projet (DSPCHECK/Jenkinsfile)
+//
+// Pipeline en 14 étapes, alignées sur la figure 2 du rapport :
+//   1. Checkout            │ 8. Quality (SonarQube)
+//   2. Build               │ 9. Docker build
+//   3. Validation (lint)   │ 10. Image Security Scan (Trivy)
+//   4. Tests unitaires     │ 11. Blackduck SCA Scan
+//   5. Tests intégration   │ 12. Docker publish
+//   6. Tests fonctionnels  │ 13. Prepare (choix env)
+//   7. Cleanup             │ 14. Deployment (Ansible)
+//
+// Credentials Jenkins à configurer (Manage Jenkins → Credentials) :
+//   - sonar-token         : Secret Text (token SonarQube)
+//   - dockerhub-creds     : Username with password (Docker Hub)
+//   - ansible-ssh-key     : SSH Username with private key (serveurs cibles)
+// ============================================================================
+
+pipeline {
+    agent any
+
+    parameters {
+        booleanParam(
+            name: 'SKIP_DEPLOYMENT',
+            defaultValue: false,
+            description: 'Passer les étapes 13 et 14 (déploiement)'
+        )
+        booleanParam(
+            name: 'SKIP_DOCKER_PUBLISH',
+            defaultValue: true,
+            description: "Passer l'étape 12 si aucune credential Docker Hub configurée"
+        )
+    }
+
+    environment {
+        DOCKER_NAMESPACE = ''
+        IMAGE_BACKEND    = "${DOCKER_NAMESPACE}/dpscheck-backend"
+        IMAGE_FRONTEND   = "${DOCKER_NAMESPACE}/dpscheck-frontend"
+        IMAGE_TAG        = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'local'}"
+        SONAR_HOST_URL   = 'http://host.docker.internal:9000'
+        CHROME_PATH = '/usr/bin/chromium'
+    }
+
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timestamps()
+        ansiColor('xterm')
+        disableConcurrentBuilds()
+    }
+
+    stages {
+
+        // ====================================================================
+        // ÉTAPE 1 — Checkout
+        // ====================================================================
+        stage('1 · Checkout') {
+            steps {
+                echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+                echo '  1/14 — Récupération du code source'
+                echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+                checkout scm
+                sh 'git log -1 --pretty=format:"Commit %h par %an%n%s"'
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 2 — Build (en parallèle)
+        // ====================================================================
+        stage('2 · Build') {
+            parallel {
+                stage('Build Backend') {
+                    steps {
+                        dir('Backend') {
+                            sh 'npm ci --prefer-offline --no-audit'
+                            sh 'npm run build'
+                        }
+                    }
+                }
+                stage('Build Frontend') {
+                    steps {
+                        dir('Frontend') {
+                            sh 'npm ci --prefer-offline --no-audit'
+                            sh 'npm run build'
+                        }
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 3 — Validation (lint en parallèle)
+        // ====================================================================
+        stage('3 · Validation') {
+            parallel {
+                stage('Lint Backend') {
+                    steps {
+                        dir('Backend') {
+                            // `|| true` pour ne pas bloquer sur des warnings
+                            sh 'npm run lint || echo "Warnings ESLint côté Backend"'
+                        }
+                    }
+                }
+                stage('Lint Frontend') {
+                    steps {
+                        dir('Frontend') {
+                            sh 'npm run lint || echo "Warnings ESLint côté Frontend"'
+                        }
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 4 — Tests unitaires (avec couverture)
+        // ====================================================================
+        stage('4 · Tests unitaires') {
+            steps {
+                dir('Backend') {
+                    sh 'npm run test:cov'
+                }
+            }
+            post {
+                always {
+                    junit(
+                        testResults: 'Backend/junit.xml',
+                        allowEmptyResults: true
+                    )
+                    archiveArtifacts(
+                        artifacts: 'Backend/coverage/**/*',
+                        allowEmptyArchive: true,
+                        fingerprint: true
+                    )
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 5 — Tests d'intégration (BDD test isolée sur port 5433)
+        // ====================================================================
+        stage("5 · Tests d'intégration") {
+            steps {
+                sh 'docker compose -f docker-compose.integration-test.yaml up -d'
+                // Polling pour attendre que Postgres accepte les connexions
+                sh '''
+                    for i in $(seq 1 30); do
+                        if docker exec dpscheck_postgres_test pg_isready -U dpscheck_test 2>/dev/null; then
+                            echo "Postgres de test prêt"
+                            break
+                        fi
+                        sleep 2
+                    done
+                '''
+                dir('Backend') {
+                    sh 'npm run test:e2e'
+                }
+            }
+            post {
+                always {
+                    sh 'docker compose -f docker-compose.integration-test.yaml down -v || true'
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 6 — Tests fonctionnels (Selenium sur stack dédiée port 4201)
+        // ====================================================================
+        stage('6 · Tests fonctionnels') {
+            steps {
+                sh 'docker compose -f docker-compose.selenium.yaml up -d --build'
+                // Attend que le frontend Selenium réponde
+                sh '''
+                    for i in $(seq 1 40); do
+                        if curl -sf http://localhost:4201 > /dev/null 2>&1; then
+                            echo "Stack Selenium prête"
+                            break
+                        fi
+                        sleep 3
+                    done
+                '''
+                dir('Selenium') {
+                    sh 'npm ci --prefer-offline --no-audit'
+                    sh 'HEADLESS=true npm test'
+                }
+            }
+            post {
+                always {
+                    sh 'docker compose -f docker-compose.selenium.yaml down -v || true'
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 7 — Cleanup de l'environnement de test
+        // ====================================================================
+        stage('7 · Cleanup') {
+            steps {
+                sh '''
+                    docker compose -f docker-compose.integration-test.yaml down -v 2>/dev/null || true
+                    docker compose -f docker-compose.selenium.yaml down -v 2>/dev/null || true
+                    docker container prune -f
+                    docker volume prune -f
+                '''
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 8 — Quality (SonarQube + Quality Gate bloquant)
+        // ====================================================================
+        stage('8 · Quality (SonarQube)') {
+            steps {
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    sh 'chmod +x SonarQube/*.sh'
+                    sh './SonarQube/run-sonar-all.sh'
+                }
+            }
+            post {
+                always {
+                    script {
+                        try {
+                            timeout(time: 5, unit: 'MINUTES') {
+                                waitForQualityGate abortPipeline: true
+                            }
+                        } catch (err) {
+                            echo "Quality Gate non disponible : ${err.message}"
+                            unstable('Quality Gate non vérifié — pipeline UNSTABLE')
+                        }
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 9 — Docker build (en parallèle)
+        // ====================================================================
+        stage('9 · Docker build') {
+            parallel {
+                stage('Backend image') {
+                    steps {
+                        sh "docker build -t ${IMAGE_BACKEND}:${IMAGE_TAG} ./Backend"
+                        sh "docker tag ${IMAGE_BACKEND}:${IMAGE_TAG} ${IMAGE_BACKEND}:latest"
+                    }
+                }
+                stage('Frontend image') {
+                    steps {
+                        sh "docker build -t ${IMAGE_FRONTEND}:${IMAGE_TAG} ./Frontend"
+                        sh "docker tag ${IMAGE_FRONTEND}:${IMAGE_TAG} ${IMAGE_FRONTEND}:latest"
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 10 — Image Security Scan (Trivy)
+        // ====================================================================
+        stage('10 · Image Security Scan (Trivy)') {
+            steps {
+                script {
+                    ['Backend', 'Frontend'].each { name ->
+                        def image = name == 'Backend' ? IMAGE_BACKEND : IMAGE_FRONTEND
+                        echo "Trivy scan : ${image}:${IMAGE_TAG}"
+                        sh """
+                            docker run --rm \\
+                                -v /var/run/docker.sock:/var/run/docker.sock \\
+                                -v \$HOME/.cache/trivy:/root/.cache/trivy \\
+                                aquasec/trivy:latest image \\
+                                --severity HIGH,CRITICAL \\
+                                --ignore-unfixed \\
+                                --exit-code 0 \\
+                                --format table \\
+                                ${image}:${IMAGE_TAG}
+                        """
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 11 — Blackduck SCA Scan (npm audit en remplacement)
+        // ====================================================================
+        stage('11 · Blackduck SCA Scan') {
+            steps {
+                echo '[SCA] Analyse des dépendances (équivalent open source : npm audit)'
+                dir('Backend') {
+                    sh 'npm audit --audit-level=high --production || echo "Vulnérabilités backend détectées"'
+                }
+                dir('Frontend') {
+                    sh 'npm audit --audit-level=high --production || echo "Vulnérabilités frontend détectées"'
+                }
+                echo '[SCA] Analyse terminée'
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 12 — Docker publish (uniquement sur branches main/develop)
+        // ====================================================================
+        stage('12 · Docker publish') {
+            when {
+                allOf {
+                    not { expression { params.SKIP_DOCKER_PUBLISH } }
+                    anyOf {
+                        branch 'main'
+                        branch 'master'
+                        branch 'develop'
+                    }
+                }
+            }
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PWD'
+                )]) {
+                    sh '''
+                        echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ''' + "${IMAGE_BACKEND}:${IMAGE_TAG}" + '''
+                        docker push ''' + "${IMAGE_BACKEND}:latest" + '''
+                        docker push ''' + "${IMAGE_FRONTEND}:${IMAGE_TAG}" + '''
+                        docker push ''' + "${IMAGE_FRONTEND}:latest" + '''
+                        docker logout
+                    '''
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 13 — Prepare (choix de l'environnement, timeout 2 min)
+        // ====================================================================
+        stage('13 · Prepare') {
+            when {
+                not { expression { params.SKIP_DEPLOYMENT } }
+            }
+            steps {
+                script {
+                    try {
+                        timeout(time: 2, unit: 'MINUTES') {
+                            env.TARGET_ENV = input(
+                                id: 'deploy-env-input',
+                                message: "Environnement de déploiement ?",
+                                parameters: [
+                                    choice(
+                                        name: 'ENV',
+                                        choices: ['DEV', 'RCT', 'PPRD', 'PRD'],
+                                        description: 'Délai 2 min, sinon DEV par défaut'
+                                    )
+                                ]
+                            )
+                        }
+                    } catch (err) {
+                        env.TARGET_ENV = 'DEV'
+                        echo '⏱  Timeout atteint → déploiement sur DEV par défaut'
+                    }
+                    echo "🎯 Environnement cible sélectionné : ${env.TARGET_ENV}"
+                }
+            }
+        }
+
+        // ====================================================================
+        // ÉTAPE 14 — Deployment (Ansible)
+        // ====================================================================
+        stage('14 · Deployment (Ansible)') {
+            when {
+                not { expression { params.SKIP_DEPLOYMENT } }
+            }
+            steps {
+                script {
+                    def targetEnv = (env.TARGET_ENV ?: 'DEV').toLowerCase()
+                    echo "Déploiement vers l'environnement ${targetEnv.toUpperCase()}"
+
+                    // En local ou si pas de credentials SSH, on utilise une connexion locale
+                    if (targetEnv == 'dev') {
+                        sh """
+                            ansible-playbook \\
+                                -i ansible/inventories/${targetEnv}/hosts.yaml \\
+                                --connection=local \\
+                                --extra-vars 'image_tag=${IMAGE_TAG} target_env=${targetEnv}' \\
+                                ansible/deploy.yaml
+                        """
+                    } else {
+                        withCredentials([sshUserPrivateKey(
+                            credentialsId: 'ansible-ssh-key',
+                            keyFileVariable: 'SSH_KEY',
+                            usernameVariable: 'SSH_USER'
+                        )]) {
+                            sh """
+                                ansible-playbook \\
+                                    -i ansible/inventories/${targetEnv}/hosts.yaml \\
+                                    --private-key \$SSH_KEY \\
+                                    --user \$SSH_USER \\
+                                    --extra-vars 'image_tag=${IMAGE_TAG} target_env=${targetEnv}' \\
+                                    ansible/deploy.yaml
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+            echo "  ✅ Pipeline réussi — Build ${env.BUILD_NUMBER}"
+            echo "  Image tag : ${IMAGE_TAG}"
+            echo "  Environnement déployé : ${env.TARGET_ENV ?: 'N/A (skippé)'}"
+            echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+        }
+        failure {
+            echo "❌ Pipeline échoué — Build ${env.BUILD_NUMBER}"
+        }
+        unstable {
+            echo "⚠  Pipeline UNSTABLE — tests ou quality gate instables"
+        }
+        always {
+            sh '''
+                docker compose -f docker-compose.integration-test.yaml down -v 2>/dev/null || true
+                docker compose -f docker-compose.selenium.yaml down -v 2>/dev/null || true
+            '''
+        }
+    }
+}

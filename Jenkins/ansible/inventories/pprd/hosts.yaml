@@ -1,0 +1,15 @@
+# Inventaire Ansible — Environnement PPRD (pré-production)
+all:
+  children:
+    dpscheck_servers:
+      hosts:
+        pprd.dpscheck.example.com:
+          ansible_host: 10.0.20.20  # Placeholder
+      vars:
+        ansible_user: deploy
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        api_port: 3000
+        frontend_port: 80
+        db_port: 5432
+        db_password: "{{ vault_pprd_db_password }}"
+        jwt_secret: "{{ vault_pprd_jwt_secret }}"

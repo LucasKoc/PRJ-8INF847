@@ -63,3 +63,4 @@ baseline.json
 dist/
 tsconfig.build.tsbuildinfo
 coverage/
+junit.xml

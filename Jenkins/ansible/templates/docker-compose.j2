@@ -1,0 +1,55 @@
+# Généré par Ansible — Déploiement DPSCHECK {{ target_env | upper }}
+# Tag image : {{ image_tag }}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dpscheck_postgres_{{ target_env }}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dpscheck
+      POSTGRES_PASSWORD: {{ db_password | default('changeme') }}
+      POSTGRES_DB: dpscheck
+    volumes:
+      - dpscheck_pgdata_{{ target_env }}:/var/lib/postgresql/data
+    ports:
+      - "{{ db_port | default(5432) }}:5432"
+    networks:
+      - dpscheck_net_{{ target_env }}
+
+  api:
+    image: {{ docker_namespace }}/dpscheck-backend:{{ image_tag }}
+    container_name: dpscheck_api_{{ target_env }}
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: dpscheck
+      DB_PASSWORD: {{ db_password | default('changeme') }}
+      DB_NAME: dpscheck
+      JWT_SECRET: {{ jwt_secret | default('change_me_in_prd') }}
+    ports:
+      - "{{ api_port | default(3000) }}:3000"
+    networks:
+      - dpscheck_net_{{ target_env }}
+
+  frontend:
+    image: {{ docker_namespace }}/dpscheck-frontend:{{ image_tag }}
+    container_name: dpscheck_frontend_{{ target_env }}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "{{ frontend_port | default(4200) }}:80"
+    networks:
+      - dpscheck_net_{{ target_env }}
+
+volumes:
+  dpscheck_pgdata_{{ target_env }}:
+
+networks:
+  dpscheck_net_{{ target_env }}:
+    driver: bridge

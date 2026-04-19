@@ -1,0 +1,16 @@
+# Inventaire Ansible — Environnement RCT (tests métiers)
+# Remplacer les hôtes par les vrais serveurs RCT avant usage en production.
+all:
+  children:
+    dpscheck_servers:
+      hosts:
+        rct.dpscheck.example.com:
+          ansible_host: 10.0.10.20  # Placeholder
+      vars:
+        ansible_user: deploy
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        api_port: 3000
+        frontend_port: 4200
+        db_port: 5432
+        db_password: "{{ vault_rct_db_password | default('rctpwd') }}"
+        jwt_secret: "{{ vault_rct_jwt_secret | default('rct_secret') }}"

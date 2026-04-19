@@ -1,0 +1,35 @@
+services:
+  jenkins:
+    build:
+      context: ./Jenkins
+      dockerfile: Dockerfile
+    container_name: dpscheck_jenkins
+    restart: unless-stopped
+    privileged: true
+    user: root  # Nécessaire pour accéder au socket Docker
+    ports:
+      - "8080:8080"   # UI Jenkins
+      - "50000:50000" # Port pour agents Jenkins distants
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # Socket Docker : permet à Jenkins de piloter Docker de l'hôte
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Optionnel : monter le projet pour les tests locaux sans SCM
+      # - ./:/workspace/dpscheck:ro
+    environment:
+      # JVM options pour Jenkins
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=true -Xmx2048m"
+      # Permet aux conteneurs lancés par Jenkins de résoudre host.docker.internal
+      # (utilisé pour accéder à SonarQube sur le port 9000 de l'hôte)
+      DOCKER_HOST_INTERNAL: "host.docker.internal"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - jenkins_net
+
+volumes:
+  jenkins_home:
+
+networks:
+  jenkins_net:
+    driver: bridge
