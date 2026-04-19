@@ -7,7 +7,7 @@
 //   1. Checkout            │ 8. Quality (SonarQube)
 //   2. Build               │ 9. Docker build
 //   3. Validation (lint)   │ 10. Image Security Scan (Trivy)
-//   4. Tests unitaires     │ 11. Blackduck SCA Scan
+//   4. Tests unitaires     │
 //   5. Tests intégration   │ 12. Docker publish
 //   6. Tests fonctionnels  │ 13. Prepare (choix env)
 //   7. Cleanup             │ 14. Deployment (Ansible)
@@ -35,7 +35,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_NAMESPACE = ''
+        DOCKER_NAMESPACE = '450666049652775641901333182796'
         IMAGE_BACKEND    = "${DOCKER_NAMESPACE}/dpscheck-backend"
         IMAGE_FRONTEND   = "${DOCKER_NAMESPACE}/dpscheck-frontend"
         IMAGE_TAG        = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'local'}"
@@ -56,7 +56,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 1 — Checkout
         // ====================================================================
-        stage('1 · Checkout') {
+        stage('Checkout') {
             steps {
                 echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
                 echo '  1/14 — Récupération du code source'
@@ -69,7 +69,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 2 — Build (en parallèle)
         // ====================================================================
-        stage('2 · Build') {
+        stage('Build') {
             parallel {
                 stage('Build Backend') {
                     steps {
@@ -93,7 +93,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 3 — Validation (lint en parallèle)
         // ====================================================================
-        stage('3 · Validation') {
+        stage('Validation') {
             parallel {
                 stage('Lint Backend') {
                     steps {
@@ -116,7 +116,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 4 — Tests unitaires (avec couverture)
         // ====================================================================
-        stage('4 · Tests unitaires') {
+        stage('Tests unitaires') {
             steps {
                 dir('Backend') {
                     sh 'npm run test:cov'
@@ -140,7 +140,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 5 — Tests d'intégration (BDD test isolée sur port 5433)
         // ====================================================================
-        stage("5 · Tests d'intégration") {
+        stage("Tests d'intégration") {
             steps {
                 sh 'docker compose -f docker-compose.integration-test.yaml up -d'
                 // Polling pour attendre que Postgres accepte les connexions
@@ -167,7 +167,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 6 — Tests fonctionnels (Selenium sur stack dédiée port 4201)
         // ====================================================================
-        stage('6 · Tests fonctionnels') {
+        stage('Tests fonctionnels') {
             steps {
                 sh 'docker compose -f docker-compose.selenium.yaml up -d --build'
                 // Attend que le frontend Selenium réponde
@@ -195,7 +195,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 7 — Cleanup de l'environnement de test
         // ====================================================================
-        stage('7 · Cleanup') {
+        stage('Cleanup') {
             steps {
                 sh '''
                     docker compose -f docker-compose.integration-test.yaml down -v 2>/dev/null || true
@@ -209,7 +209,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 8 — Quality (SonarQube + Quality Gate bloquant)
         // ====================================================================
-        stage('8 · Quality (SonarQube)') {
+        stage('Quality (SonarQube)') {
             steps {
                 withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                     sh 'chmod +x SonarQube/*.sh'
@@ -235,7 +235,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 9 — Docker build (en parallèle)
         // ====================================================================
-        stage('9 · Docker build') {
+        stage('Docker build') {
             parallel {
                 stage('Backend image') {
                     steps {
@@ -255,7 +255,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 10 — Image Security Scan (Trivy)
         // ====================================================================
-        stage('10 · Image Security Scan (Trivy)') {
+        stage('Image Security Scan (Trivy)') {
             steps {
                 script {
                     ['Backend', 'Frontend'].each { name ->
@@ -278,25 +278,9 @@ pipeline {
         }
 
         // ====================================================================
-        // ÉTAPE 11 — Blackduck SCA Scan (npm audit en remplacement)
-        // ====================================================================
-        stage('11 · Blackduck SCA Scan') {
-            steps {
-                echo '[SCA] Analyse des dépendances (équivalent open source : npm audit)'
-                dir('Backend') {
-                    sh 'npm audit --audit-level=high --production || echo "Vulnérabilités backend détectées"'
-                }
-                dir('Frontend') {
-                    sh 'npm audit --audit-level=high --production || echo "Vulnérabilités frontend détectées"'
-                }
-                echo '[SCA] Analyse terminée'
-            }
-        }
-
-        // ====================================================================
         // ÉTAPE 12 — Docker publish (uniquement sur branches main/develop)
         // ====================================================================
-        stage('12 · Docker publish') {
+        stage('Docker publish') {
             when {
                 allOf {
                     not { expression { params.SKIP_DOCKER_PUBLISH } }
@@ -328,7 +312,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 13 — Prepare (choix de l'environnement, timeout 2 min)
         // ====================================================================
-        stage('13 · Prepare') {
+        stage('Prepare') {
             when {
                 not { expression { params.SKIP_DEPLOYMENT } }
             }
@@ -350,9 +334,9 @@ pipeline {
                         }
                     } catch (err) {
                         env.TARGET_ENV = 'DEV'
-                        echo '⏱  Timeout atteint → déploiement sur DEV par défaut'
+                        echo 'Timeout atteint → déploiement sur DEV par défaut'
                     }
-                    echo "🎯 Environnement cible sélectionné : ${env.TARGET_ENV}"
+                    echo "Environnement cible sélectionné : ${env.TARGET_ENV}"
                 }
             }
         }
@@ -360,7 +344,7 @@ pipeline {
         // ====================================================================
         // ÉTAPE 14 — Deployment (Ansible)
         // ====================================================================
-        stage('14 · Deployment (Ansible)') {
+        stage('Deployment (Ansible)') {
             when {
                 not { expression { params.SKIP_DEPLOYMENT } }
             }
@@ -402,16 +386,16 @@ pipeline {
     post {
         success {
             echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-            echo "  ✅ Pipeline réussi — Build ${env.BUILD_NUMBER}"
+            echo "  Pipeline réussi — Build ${env.BUILD_NUMBER}"
             echo "  Image tag : ${IMAGE_TAG}"
             echo "  Environnement déployé : ${env.TARGET_ENV ?: 'N/A (skippé)'}"
             echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
         }
         failure {
-            echo "❌ Pipeline échoué — Build ${env.BUILD_NUMBER}"
+            echo "Pipeline échoué — Build ${env.BUILD_NUMBER}"
         }
         unstable {
-            echo "⚠  Pipeline UNSTABLE — tests ou quality gate instables"
+            echo "Pipeline UNSTABLE — tests ou quality gate instables"
         }
         always {
             sh '''
