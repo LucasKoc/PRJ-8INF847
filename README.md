@@ -2,6 +2,12 @@
 
 ## Environment setup
 
+### Requirements
+
+Required :
+- Node (pref. v24 LTS)
+- Docker
+
 ## Tests
 
 ### Unit tests
@@ -28,3 +34,20 @@ docker compose -f docker-compose.selenium.yaml up -d --build
 cd Selenium && npm test
 cd .. && docker compose -f docker-compose.selenium.yaml down -v
 ```
+
+## SonarQube 
+
+### SonarQube Docker Compose
+
+```bash
+docker compose -f docker-compose.sonarqube.yaml up -d
+
+# http://localhost:9000 -> admin/admin -> change password -> generate token
+export SONAR_TOKEN=sqa_9750aa2022808896910dc7a0e53f48711e1187d0
+
+# Analyze SonarQube
+./SonarQube/run-sonar-all.sh
+
+# docker compose -f docker-compose.sonarqube.yaml down
+```
+

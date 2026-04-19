@@ -62,3 +62,4 @@ baseline.json
 .env
 dist/
 tsconfig.build.tsbuildinfo
+coverage/
