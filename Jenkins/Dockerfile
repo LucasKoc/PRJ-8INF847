@@ -25,6 +25,15 @@ RUN install -m 0755 -d /etc/apt/keyrings && \
       docker-compose-plugin \
     && rm -rf /var/lib/apt/lists/*
 
+# ---------- Sonar Scanner natif (ARM64 compatible) ----------
+RUN curl -fsSL \
+    https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.2.1.4610-linux-aarch64.zip \
+    -o /tmp/sonar-scanner.zip && \
+    unzip /tmp/sonar-scanner.zip -d /opt && \
+    ln -s /opt/sonar-scanner-6.2.1.4610-linux-aarch64/bin/sonar-scanner /usr/local/bin/sonar-scanner && \
+    rm /tmp/sonar-scanner.zip && \
+    sonar-scanner --version
+
 # ---------- Node.js 20 LTS ----------
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \

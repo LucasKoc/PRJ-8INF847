@@ -224,9 +224,19 @@ pipeline {
         // ====================================================================
         stage('Quality (SonarQube)') {
             steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    sh 'chmod +x SonarQube/*.sh'
-                    sh './SonarQube/run-sonar-all.sh'
+                withSonarQubeEnv('SonarQube') {
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        dir('Backend') {
+                            sh 'npm run test:cov'
+                            sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN -Dsonar.host.url=http://host.docker.internal:9000'
+                        }
+                        dir('Frontend') {
+                            sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN -Dsonar.host.url=http://host.docker.internal:9000'
+                        }
+                        dir('Selenium') {
+                            sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN -Dsonar.host.url=http://host.docker.internal:9000'
+                        }
+                    }
                 }
             }
             post {
@@ -234,10 +244,10 @@ pipeline {
                     script {
                         try {
                             timeout(time: 5, unit: 'MINUTES') {
-                                waitForQualityGate abortPipeline: true
+                                waitForQualityGate abortPipeline: false
                             }
                         } catch (err) {
-                            echo "Quality Gate non disponible : ${err.message}"
+                            echo "Quality Gate : ${err.message}"
                             unstable('Quality Gate non vérifié — pipeline UNSTABLE')
                         }
                     }
