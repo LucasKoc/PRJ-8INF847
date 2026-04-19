@@ -36,7 +36,7 @@ export class RegistrationsService {
 
   /**
    * Captain submits their team.
-   * PRD §6.5 validations: tournament OPEN, deadline not passed, team eligible,
+   * Tournament OPEN, deadline not passed, team eligible,
    * not already registered, max teams not reached.
    */
   async register(
@@ -53,7 +53,6 @@ export class RegistrationsService {
       );
     }
 
-    // --- Gap-analysis Fix #3 — PRD §6.5 ---
     // Status can be OPEN but deadline already passed → still block new registrations.
     const now = new Date();
     if (tournament.registrationDeadline <= now) {
@@ -164,7 +163,6 @@ export class RegistrationsService {
       );
     }
 
-    // --- Gap-analysis Fix #4 — PRD §6.5 ---
     // Cannot cancel after the registration deadline has passed.
     const now = new Date();
     if (registration.tournament.registrationDeadline <= now) {

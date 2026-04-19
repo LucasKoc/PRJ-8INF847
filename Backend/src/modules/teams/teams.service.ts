@@ -223,7 +223,7 @@ export class TeamsService {
   }
 
   // =========================================================================
-  // PRD §6.4 eligibility check — used by Registrations
+  // Eligibility check — used by Registrations
   // =========================================================================
   async countActiveStarters(teamId: string): Promise<number> {
     return this.members.count({

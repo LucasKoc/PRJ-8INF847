@@ -25,8 +25,7 @@ export class CreateTournamentDto {
   @MaxLength(50)
   game?: string;
 
-  // --- Gap-analysis Fix #1 ---
-  // PRD §6.5: format must be BO1 or BO3 — use enum, not free text.
+  // Format must be BO1 or BO3 — use enum, not free text.
   @ApiProperty({ enum: TournamentFormat, example: TournamentFormat.BO1 })
   @IsEnum(TournamentFormat, { message: 'format must be either BO1 or BO3' })
   format!: TournamentFormat;

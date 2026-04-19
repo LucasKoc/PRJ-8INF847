@@ -86,7 +86,7 @@ export class TournamentsController {
   }
 
   /**
-   * TBD — PRD §6.6 bracket system is deferred to V2.
+   * TBD — Bracket system is deferred to V2.
    * Returns 501 Not Implemented with a clear message for the frontend.
    */
   @Public()

@@ -11,7 +11,7 @@ import { TournamentStatus } from '../../common/enums';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
 
-// Valid status transitions (mirror of PRD §6.5 + DB trigger)
+// Valid status transitions
 const ALLOWED_TRANSITIONS: Record<TournamentStatus, TournamentStatus[]> = {
   [TournamentStatus.DRAFT]: [TournamentStatus.OPEN, TournamentStatus.CANCELLED],
   [TournamentStatus.OPEN]: [TournamentStatus.CLOSED, TournamentStatus.CANCELLED],
@@ -29,7 +29,6 @@ export class TournamentsService {
   // =========================================================================
 
   /**
-   * Gap-analysis Fix #2 — PRD §6.2
    * Public list excludes DRAFT tournaments, but an authenticated TO also sees
    * their own drafts. callerId is undefined for anonymous visitors.
    */
@@ -101,7 +100,7 @@ export class TournamentsService {
     const tournament = await this.findOne(id);
     this.assertOwnership(tournament, callerId);
 
-    // PRD §6.5: edits only allowed while DRAFT
+    // Edits only allowed while DRAFT
     if (tournament.status !== TournamentStatus.DRAFT) {
       throw new BadRequestException(
         'Tournament can only be edited while in DRAFT. Once OPEN, tournaments are locked.',
