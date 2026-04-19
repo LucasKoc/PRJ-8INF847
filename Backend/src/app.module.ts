@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import configuration from './config/configuration';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
@@ -27,21 +27,16 @@ import { RegistrationsModule } from './modules/registrations/registrations.modul
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+      useFactory: (
+        config: ConfigService,
+      ): Promise<TypeOrmModuleOptions> | TypeOrmModuleOptions => ({
         type: 'postgres',
         host: config.get<string>('db.host'),
         port: config.get<number>('db.port'),
         username: config.get<string>('db.user'),
         password: config.get<string>('db.password'),
         database: config.get<string>('db.name'),
-        entities: [
-          User,
-          PlayerProfile,
-          Team,
-          TeamMember,
-          Tournament,
-          TournamentRegistration,
-        ],
+        entities: [User, PlayerProfile, Team, TeamMember, Tournament, TournamentRegistration],
         synchronize: config.get<boolean>('db.synchronize'),
         logging: config.get<boolean>('db.logging'),
       }),

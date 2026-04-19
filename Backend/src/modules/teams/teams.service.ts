@@ -61,12 +61,10 @@ export class TeamsService {
       where: { userId: captainUserId, status: MemberStatus.ACTIVE },
     });
     if (alreadyActive) {
-      throw new BadRequestException(
-        'Vous appartenez déjà activement à une équipe',
-      );
+      throw new BadRequestException('Vous appartenez déjà activement à une équipe');
     }
 
-    return this.dataSource.transaction(async (manager) => {
+    return this.dataSource.transaction(async manager => {
       const team = manager.create(Team, {
         name: dto.name,
         tag: dto.tag.toUpperCase(),
@@ -87,11 +85,7 @@ export class TeamsService {
     });
   }
 
-  async update(
-    id: string,
-    requesterUserId: string,
-    dto: UpdateTeamDto,
-  ): Promise<Team> {
+  async update(id: string, requesterUserId: string, dto: UpdateTeamDto): Promise<Team> {
     const team = await this.findById(id);
     this.assertIsCaptain(team, requesterUserId);
 
@@ -122,9 +116,7 @@ export class TeamsService {
 
   assertIsCaptain(team: Team, requesterUserId: string): void {
     if (team.captainUserId !== requesterUserId) {
-      throw new ForbiddenException(
-        'Seul le capitaine peut effectuer cette action',
-      );
+      throw new ForbiddenException('Seul le capitaine peut effectuer cette action');
     }
   }
 }

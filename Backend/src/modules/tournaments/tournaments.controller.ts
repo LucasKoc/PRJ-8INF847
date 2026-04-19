@@ -10,10 +10,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  AuthenticatedUser,
-  CurrentUser,
-} from '../../common/decorators/current-user.decorator';
+import { AuthenticatedUser, CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums';
 import { ChangeStatusDto } from './dto/change-status.dto';
@@ -40,10 +37,7 @@ export class TournamentsController {
   @Post()
   @Roles(UserRole.TO)
   @HttpCode(HttpStatus.CREATED)
-  create(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: CreateTournamentDto,
-  ) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateTournamentDto) {
     return this.tournamentsService.create(user.userId, dto);
   }
 

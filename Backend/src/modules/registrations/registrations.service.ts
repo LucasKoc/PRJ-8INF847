@@ -61,14 +61,10 @@ export class RegistrationsService {
       throw new NotFoundException(`Tournoi ${tournamentId} introuvable`);
     }
     if (tournament.status !== TournamentStatus.OPEN) {
-      throw new BadRequestException(
-        "Le tournoi n'est pas ouvert aux inscriptions",
-      );
+      throw new BadRequestException("Le tournoi n'est pas ouvert aux inscriptions");
     }
     if (tournament.registrationDeadline <= new Date()) {
-      throw new BadRequestException(
-        "La date limite d'inscription est dépassée",
-      );
+      throw new BadRequestException("La date limite d'inscription est dépassée");
     }
 
     const team = await this.teamRepo.findOne({ where: { id: dto.teamId } });
@@ -76,9 +72,7 @@ export class RegistrationsService {
       throw new NotFoundException(`Équipe ${dto.teamId} introuvable`);
     }
     if (team.captainUserId !== requesterUserId) {
-      throw new ForbiddenException(
-        'Seul le capitaine peut inscrire son équipe',
-      );
+      throw new ForbiddenException('Seul le capitaine peut inscrire son équipe');
     }
 
     const starters = await this.teamsService.countActiveStarters(team.id);
@@ -126,9 +120,7 @@ export class RegistrationsService {
       );
     }
     if (reg.status !== RegistrationStatus.PENDING) {
-      throw new BadRequestException(
-        `Inscription déjà traitée (statut : ${reg.status})`,
-      );
+      throw new BadRequestException(`Inscription déjà traitée (statut : ${reg.status})`);
     }
 
     reg.status = dto.status;
@@ -141,21 +133,13 @@ export class RegistrationsService {
   /**
    * Annulation d'une inscription par le capitaine de l'équipe.
    */
-  async cancel(
-    registrationId: string,
-    requesterUserId: string,
-  ): Promise<TournamentRegistration> {
+  async cancel(registrationId: string, requesterUserId: string): Promise<TournamentRegistration> {
     const reg = await this.findById(registrationId);
 
     if (reg.team.captainUserId !== requesterUserId) {
-      throw new ForbiddenException(
-        "Seul le capitaine de l'équipe peut annuler cette inscription",
-      );
+      throw new ForbiddenException("Seul le capitaine de l'équipe peut annuler cette inscription");
     }
-    if (
-      reg.status !== RegistrationStatus.PENDING &&
-      reg.status !== RegistrationStatus.APPROVED
-    ) {
+    if (reg.status !== RegistrationStatus.PENDING && reg.status !== RegistrationStatus.APPROVED) {
       throw new BadRequestException('Inscription déjà annulée ou rejetée');
     }
 

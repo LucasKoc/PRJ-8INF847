@@ -39,15 +39,15 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
 
-  @OneToOne(() => PlayerProfile, (profile) => profile.user)
+  @OneToOne(() => PlayerProfile, profile => profile.user)
   playerProfile?: PlayerProfile;
 
-  @OneToMany(() => Team, (team) => team.captain)
+  @OneToMany(() => Team, team => team.captain)
   captainOfTeams?: Team[];
 
-  @OneToMany(() => TeamMember, (member) => member.user)
+  @OneToMany(() => TeamMember, member => member.user)
   teamMemberships?: TeamMember[];
 
-  @OneToMany(() => Tournament, (tournament) => tournament.organizer)
+  @OneToMany(() => Tournament, tournament => tournament.organizer)
   organizedTournaments?: Tournament[];
 }

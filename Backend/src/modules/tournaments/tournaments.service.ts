@@ -18,10 +18,7 @@ import { UpdateTournamentDto } from './dto/update-tournament.dto';
  */
 const ALLOWED_TRANSITIONS: Record<TournamentStatus, TournamentStatus[]> = {
   [TournamentStatus.DRAFT]: [TournamentStatus.OPEN, TournamentStatus.CANCELLED],
-  [TournamentStatus.OPEN]: [
-    TournamentStatus.CLOSED,
-    TournamentStatus.CANCELLED,
-  ],
+  [TournamentStatus.OPEN]: [TournamentStatus.CLOSED, TournamentStatus.CANCELLED],
   [TournamentStatus.CLOSED]: [TournamentStatus.COMPLETED],
   [TournamentStatus.CANCELLED]: [],
   [TournamentStatus.COMPLETED]: [],
@@ -52,15 +49,8 @@ export class TournamentsService {
     return tournament;
   }
 
-  async create(
-    organizerUserId: string,
-    dto: CreateTournamentDto,
-  ): Promise<Tournament> {
-    this.validateDates(
-      dto.registrationDeadline,
-      dto.startsAt,
-      dto.endsAt ?? null,
-    );
+  async create(organizerUserId: string, dto: CreateTournamentDto): Promise<Tournament> {
+    this.validateDates(dto.registrationDeadline, dto.startsAt, dto.endsAt ?? null);
 
     const tournament = this.tournamentRepo.create({
       ...dto,
@@ -71,18 +61,12 @@ export class TournamentsService {
     return this.tournamentRepo.save(tournament);
   }
 
-  async update(
-    id: string,
-    requesterUserId: string,
-    dto: UpdateTournamentDto,
-  ): Promise<Tournament> {
+  async update(id: string, requesterUserId: string, dto: UpdateTournamentDto): Promise<Tournament> {
     const tournament = await this.findById(id);
     this.assertIsOrganizer(tournament, requesterUserId);
 
     if (tournament.status !== TournamentStatus.DRAFT) {
-      throw new BadRequestException(
-        'Seul un tournoi en statut DRAFT peut être modifié',
-      );
+      throw new BadRequestException('Seul un tournoi en statut DRAFT peut être modifié');
     }
 
     Object.assign(tournament, dto);
@@ -104,9 +88,7 @@ export class TournamentsService {
 
     const allowed = ALLOWED_TRANSITIONS[tournament.status];
     if (!allowed.includes(next)) {
-      throw new BadRequestException(
-        `Transition ${tournament.status} → ${next} non autorisée`,
-      );
+      throw new BadRequestException(`Transition ${tournament.status} → ${next} non autorisée`);
     }
 
     tournament.status = next;
@@ -127,27 +109,17 @@ export class TournamentsService {
 
   assertIsOrganizer(tournament: Tournament, requesterUserId: string): void {
     if (tournament.organizerUserId !== requesterUserId) {
-      throw new ForbiddenException(
-        "Seul l'organisateur peut gérer ce tournoi",
-      );
+      throw new ForbiddenException("Seul l'organisateur peut gérer ce tournoi");
     }
   }
 
-  private validateDates(
-    registrationDeadline: Date,
-    startsAt: Date,
-    endsAt: Date | null,
-  ): void {
+  private validateDates(registrationDeadline: Date, startsAt: Date, endsAt: Date | null): void {
     const now = new Date();
     if (startsAt <= now) {
-      throw new BadRequestException(
-        'La date de début doit être postérieure à la date actuelle',
-      );
+      throw new BadRequestException('La date de début doit être postérieure à la date actuelle');
     }
     if (registrationDeadline >= startsAt) {
-      throw new BadRequestException(
-        "La date limite d'inscription doit précéder la date de début",
-      );
+      throw new BadRequestException("La date limite d'inscription doit précéder la date de début");
     }
     if (endsAt && endsAt < startsAt) {
       throw new BadRequestException(

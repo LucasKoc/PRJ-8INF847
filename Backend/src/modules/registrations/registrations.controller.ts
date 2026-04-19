@@ -10,10 +10,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  AuthenticatedUser,
-  CurrentUser,
-} from '../../common/decorators/current-user.decorator';
+import { AuthenticatedUser, CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums';
 import { RegisterTeamDto } from './dto/register-team.dto';
@@ -59,10 +56,7 @@ export class RegistrationsController {
 
   @Delete('registrations/:id')
   @Roles(UserRole.PLAYER)
-  cancel(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  cancel(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.registrationsService.cancel(id, user.userId);
   }
 }

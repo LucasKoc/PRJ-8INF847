@@ -20,14 +20,14 @@ export class TeamMember {
   @Column({ name: 'team_id', type: 'bigint' })
   teamId!: string;
 
-  @ManyToOne(() => Team, (team) => team.members, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Team, team => team.members, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'team_id' })
   team!: Team;
 
   @Column({ name: 'user_id', type: 'bigint' })
   userId!: string;
 
-  @ManyToOne(() => User, (user) => user.teamMemberships, { onDelete: 'RESTRICT' })
+  @ManyToOne(() => User, user => user.teamMemberships, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'user_id' })
   user!: User;
 

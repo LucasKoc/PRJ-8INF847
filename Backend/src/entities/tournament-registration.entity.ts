@@ -21,7 +21,7 @@ export class TournamentRegistration {
   @Column({ name: 'tournament_id', type: 'bigint' })
   tournamentId!: string;
 
-  @ManyToOne(() => Tournament, (tournament) => tournament.registrations, {
+  @ManyToOne(() => Tournament, tournament => tournament.registrations, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'tournament_id' })
@@ -30,7 +30,7 @@ export class TournamentRegistration {
   @Column({ name: 'team_id', type: 'bigint' })
   teamId!: string;
 
-  @ManyToOne(() => Team, (team) => team.registrations, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Team, team => team.registrations, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'team_id' })
   team!: Team;
 

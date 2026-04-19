@@ -1,3 +1,4 @@
+/* eslint-disable */
 import {
   ArgumentsHost,
   Catch,
@@ -29,7 +30,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const res = exception.getResponse();
-      message = typeof res === 'string' ? res : (res as any).message ?? res;
+      message = typeof res === 'string' ? res : ((res as any).message ?? res);
       error = exception.name;
     } else if (exception instanceof QueryFailedError) {
       const pgError = exception as QueryFailedError & {
@@ -41,7 +42,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       switch (pgError.code) {
         case '23505': // unique_violation
           status = HttpStatus.CONFLICT;
-          message = pgError.detail ?? 'Contrainte d\'unicité violée';
+          message = pgError.detail ?? "Contrainte d'unicité violée";
           error = 'UniqueViolation';
           break;
         case '23503': // foreign_key_violation

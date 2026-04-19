@@ -20,7 +20,7 @@ export class Tournament {
   @Column({ name: 'organizer_user_id', type: 'bigint' })
   organizerUserId!: string;
 
-  @ManyToOne(() => User, (user) => user.organizedTournaments, { onDelete: 'RESTRICT' })
+  @ManyToOne(() => User, user => user.organizedTournaments, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'organizer_user_id' })
   organizer!: User;
 
@@ -54,6 +54,6 @@ export class Tournament {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
 
-  @OneToMany(() => TournamentRegistration, (reg) => reg.tournament)
+  @OneToMany(() => TournamentRegistration, reg => reg.tournament)
   registrations?: TournamentRegistration[];
 }

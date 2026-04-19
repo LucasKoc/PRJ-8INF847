@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TeamMember } from '../../entities/team-member.entity';
@@ -31,11 +27,7 @@ export class TeamMembersService {
     });
   }
 
-  async add(
-    teamId: string,
-    requesterUserId: string,
-    dto: AddTeamMemberDto,
-  ): Promise<TeamMember> {
+  async add(teamId: string, requesterUserId: string, dto: AddTeamMemberDto): Promise<TeamMember> {
     const team = await this.teamsService.findById(teamId);
     this.teamsService.assertIsCaptain(team, requesterUserId);
 
@@ -54,9 +46,7 @@ export class TeamMembersService {
       where: { userId: dto.userId, status: MemberStatus.ACTIVE },
     });
     if (activeElsewhere) {
-      throw new BadRequestException(
-        `L'utilisateur ${dto.userId} est déjà actif dans une équipe`,
-      );
+      throw new BadRequestException(`L'utilisateur ${dto.userId} est déjà actif dans une équipe`);
     }
 
     const member = this.memberRepo.create({
@@ -108,9 +98,7 @@ export class TeamMembersService {
     }
 
     if (member.userId === team.captainUserId) {
-      throw new BadRequestException(
-        'Le capitaine ne peut pas être retiré de son équipe',
-      );
+      throw new BadRequestException('Le capitaine ne peut pas être retiré de son équipe');
     }
 
     member.status = reason;

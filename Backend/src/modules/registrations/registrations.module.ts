@@ -8,10 +8,7 @@ import { RegistrationsController } from './registrations.controller';
 import { RegistrationsService } from './registrations.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([TournamentRegistration, Tournament, Team]),
-    TeamsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([TournamentRegistration, Tournament, Team]), TeamsModule],
   controllers: [RegistrationsController],
   providers: [RegistrationsService],
   exports: [RegistrationsService],

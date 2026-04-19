@@ -28,17 +28,12 @@ export class PlayerProfilesService {
   async findByUserId(userId: string): Promise<PlayerProfile> {
     const profile = await this.profileRepo.findOne({ where: { userId } });
     if (!profile) {
-      throw new NotFoundException(
-        `Aucun profil joueur pour l'utilisateur ${userId}`,
-      );
+      throw new NotFoundException(`Aucun profil joueur pour l'utilisateur ${userId}`);
     }
     return profile;
   }
 
-  async create(
-    userId: string,
-    dto: CreatePlayerProfileDto,
-  ): Promise<PlayerProfile> {
+  async create(userId: string, dto: CreatePlayerProfileDto): Promise<PlayerProfile> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException(`Utilisateur ${userId} introuvable`);
@@ -58,10 +53,7 @@ export class PlayerProfilesService {
     return this.profileRepo.save(profile);
   }
 
-  async update(
-    userId: string,
-    dto: UpdatePlayerProfileDto,
-  ): Promise<PlayerProfile> {
+  async update(userId: string, dto: UpdatePlayerProfileDto): Promise<PlayerProfile> {
     const profile = await this.findByUserId(userId);
     Object.assign(profile, dto);
     return this.profileRepo.save(profile);

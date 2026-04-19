@@ -20,7 +20,7 @@ export class PlayerProfile {
   @Column({ name: 'user_id', type: 'bigint', unique: true })
   userId!: string;
 
-  @OneToOne(() => User, (user) => user.playerProfile, { onDelete: 'CASCADE' })
+  @OneToOne(() => User, user => user.playerProfile, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user!: User;
 

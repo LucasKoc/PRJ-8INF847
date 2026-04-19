@@ -10,10 +10,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  AuthenticatedUser,
-  CurrentUser,
-} from '../../common/decorators/current-user.decorator';
+import { AuthenticatedUser, CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums';
 import { CreateTeamDto } from './dto/create-team.dto';
@@ -39,10 +36,7 @@ export class TeamsController {
   @Post()
   @Roles(UserRole.PLAYER)
   @HttpCode(HttpStatus.CREATED)
-  create(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: CreateTeamDto,
-  ) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateTeamDto) {
     return this.teamsService.create(user.userId, dto);
   }
 
