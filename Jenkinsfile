@@ -215,7 +215,7 @@ pipeline {
         }
 
         // ====================================================================
-        // ÉTAPE 8 — Quality (SonarQube + Quality Gate bloquant)
+        // ÉTAPE 8 — Quality (SonarQube + Quality Gate BLOQUANT)
         // ====================================================================
         stage('Quality (SonarQube)') {
             steps {
@@ -237,13 +237,11 @@ pipeline {
             post {
                 always {
                     script {
-                        try {
-                            timeout(time: 5, unit: 'MINUTES') {
-                                waitForQualityGate abortPipeline: false
+                        timeout(time: 5, unit: 'MINUTES') {
+                            def qg = waitForQualityGate abortPipeline: true
+                            if (qg.status != 'OK') {
+                                error "Quality Gate échoué : ${qg.status} — Pipeline interrompu"
                             }
-                        } catch (err) {
-                            echo "Quality Gate : ${err.message}"
-                            unstable('Quality Gate non vérifié — pipeline UNSTABLE')
                         }
                     }
                 }

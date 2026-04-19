@@ -1,3 +1,7 @@
+if (process.env.NEW_RELIC_LICENSE_KEY) {
+  require('newrelic');
+}
+
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';

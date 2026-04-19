@@ -14,3 +14,4 @@ all:
         db_port: 5432
         db_password: devpwd
         jwt_secret: dev_secret_change_me
+        new_relic_license_key: "eu01x7de7402dd05a0dea7d7c8ee752486a8NRAL"
