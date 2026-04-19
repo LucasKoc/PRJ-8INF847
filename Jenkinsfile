@@ -287,7 +287,6 @@ pipeline {
                         sh """
                             docker run --rm \\
                                 -v /var/run/docker.sock:/var/run/docker.sock \\
-                                -v \$HOME/.cache/trivy:/root/.cache/trivy \\
                                 aquasec/trivy:latest image \\
                                 --severity HIGH,CRITICAL \\
                                 --ignore-unfixed \\
