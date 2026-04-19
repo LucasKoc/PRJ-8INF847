@@ -27,8 +27,8 @@ import {
  *   5. Le capitaine peut annuler tant que la date limite n'est pas dépassée
  *
  * Les tests d'erreur valident les 4 correctifs critiques :
- *   • Correctif #3 — registration bloquée si deadline passée
- *   • Correctif #4 — cancel bloqué si deadline passée
+ *   • registration bloquée si deadline passée
+ *   • cancel bloqué si deadline passée
  *   • Équipe doit avoir 5 titulaires actifs
  *   • Seul le TO organisateur peut approuver/rejeter
  *

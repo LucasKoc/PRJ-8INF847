@@ -11,7 +11,7 @@ import { TournamentFormat, TournamentStatus } from '../../common/enums';
  * Tests unitaires — TournamentsService
  *
  * Couvre trois comportements critiques issus du PRD et de l'analyse des écarts :
- *   • findAll()      — correctif #2 : les tournois en BROUILLON sont exclus
+ *   • findAll()      — les tournois en BROUILLON sont exclus
  *                      de la liste publique, mais visibles par leur TO organisateur.
  *   • create()       — la date limite d'inscription doit précéder la date de début.
  *   • changeStatus() — machine à états du cycle de vie + contrôle de propriété TO.
@@ -68,7 +68,7 @@ describe('TournamentsService (unitaire)', () => {
   });
 
   // ==========================================================================
-  // findAll() — correctif #2 : filtrage des BROUILLONS selon l'identité du demandeur
+  // findAll() : filtrage des BROUILLONS selon l'identité du demandeur
   // ==========================================================================
   describe('findAll()', () => {
     it('[NOMINAL] devrait exclure les tournois BROUILLON pour un visiteur non authentifié', async () => {

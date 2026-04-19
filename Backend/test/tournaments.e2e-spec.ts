@@ -15,7 +15,7 @@ import {
  *
  * Scénarios couverts :
  *   • POST   /api/tournaments          — création par un TO authentifié
- *   • GET    /api/tournaments          — listage public avec filtre DRAFT (correctif #2)
+ *   • GET    /api/tournaments          — listage public avec filtre DRAFT
  *   • GET    /api/tournaments/:id      — détail avec relations
  *   • PATCH  /api/tournaments/:id/status — machine à états du cycle de vie
  *
@@ -124,10 +124,10 @@ describe('Tournaments (intégration)', () => {
   });
 
   // ==========================================================================
-  // GET /api/tournaments — correctif #2 : filtre DRAFT
+  // GET /api/tournaments : filtre DRAFT
   // ==========================================================================
   describe('GET /api/tournaments', () => {
-    it('[NOMINAL] un visiteur anonyme ne voit PAS les tournois DRAFT (correctif #2)', async () => {
+    it('[NOMINAL] un visiteur anonyme ne voit PAS les tournois DRAFT', async () => {
       // Le TO crée un tournoi — il est en DRAFT par défaut
       await request(app.getHttpServer())
         .post('/api/tournaments')

@@ -14,8 +14,8 @@ import { RegistrationStatus, TournamentFormat, TournamentStatus } from '../../co
  * Tests unitaires — RegistrationsService
  *
  * Couvre les deux correctifs de délai identifiés lors de l'analyse des écarts :
- *   • Correctif #3 — register() rejette l'inscription si la date limite est dépassée.
- *   • Correctif #4 — cancel() rejette l'annulation si la date limite est dépassée.
+ *   • register() rejette l'inscription si la date limite est dépassée.
+ *   • cancel() rejette l'annulation si la date limite est dépassée.
  * Teste également la vérification d'éligibilité (min. 5 titulaires actifs)
  * et le contrôle de propriété du capitaine.
  *
@@ -97,7 +97,7 @@ describe('RegistrationsService (unitaire)', () => {
   });
 
   // ==========================================================================
-  // register() — correctif #3 : vérification explicite de la date limite
+  // register() : vérification explicite de la date limite
   // ==========================================================================
   describe('register()', () => {
     it('[NOMINAL] devrait créer une inscription EN_ATTENTE quand toutes les vérifications passent', async () => {
@@ -120,7 +120,7 @@ describe('RegistrationsService (unitaire)', () => {
       expect(regsRepo.save).toHaveBeenCalled();
     });
 
-    it('[ERREUR] devrait lever BadRequestException si la date limite des inscriptions est dépassée (correctif #3)', async () => {
+    it('[ERREUR] devrait lever BadRequestException si la date limite des inscriptions est dépassée', async () => {
       // Arrange — tournoi avec date limite déjà passée
       const tournoisExpire = mockTournoi({ registrationDeadline: datePassee() });
       tournamentsRepo.findOne.mockResolvedValue(tournoisExpire);
@@ -148,7 +148,7 @@ describe('RegistrationsService (unitaire)', () => {
   });
 
   // ==========================================================================
-  // cancel() — correctif #4 : vérification de la date limite avant annulation
+  // cancel() : vérification de la date limite avant annulation
   // ==========================================================================
   describe('cancel()', () => {
     it('[NOMINAL] devrait annuler une inscription EN_ATTENTE si le demandeur est le capitaine', async () => {
@@ -168,7 +168,7 @@ describe('RegistrationsService (unitaire)', () => {
       expect(resultat.reviewedAt).toBeInstanceOf(Date);
     });
 
-    it("[ERREUR] devrait lever BadRequestException lors d'une annulation après la date limite (correctif #4)", async () => {
+    it("[ERREUR] devrait lever BadRequestException lors d'une annulation après la date limite", async () => {
       // Arrange — date limite déjà passée
       const inscription = mockInscription({
         team: mockEquipe({ captainUserId: '20' }),
