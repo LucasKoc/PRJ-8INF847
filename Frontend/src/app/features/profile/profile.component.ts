@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '@core/services/auth.service';
@@ -29,10 +36,18 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
         <div class="surface p-6">
           @if (!hasProfile() && !editing()) {
             <div class="text-center py-6">
-              <div class="inline-flex items-center justify-center w-12 h-12 rounded-md bg-raised border border-border text-muted mb-4">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6">
-                  <circle cx="12" cy="8" r="5"/>
-                  <path d="M3 21v-1a8 8 0 0116 0v1"/>
+              <div
+                class="inline-flex items-center justify-center w-12 h-12 rounded-md bg-raised border border-border text-muted mb-4"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="w-6 h-6"
+                >
+                  <circle cx="12" cy="8" r="5" />
+                  <path d="M3 21v-1a8 8 0 0116 0v1" />
                 </svg>
               </div>
               <h3 class="mb-2">Aucun profil pour l'instant</h3>
@@ -59,7 +74,9 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
               <dt class="label text-muted self-center">Rôle</dt>
               <dd class="text-ink">
                 @if (profile()!.mainRole; as role) {
-                  <span class="inline-flex px-2 py-0.5 rounded bg-raised text-xs font-medium border border-border">
+                  <span
+                    class="inline-flex px-2 py-0.5 rounded bg-raised text-xs font-medium border border-border"
+                  >
                     {{ roleLabel(role) }}
                   </span>
                 } @else {
@@ -85,8 +102,12 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
               </dd>
             </dl>
             <div class="flex gap-2 mt-6 pt-5 border-t border-border">
-              <button type="button" class="btn btn-secondary btn-md" (click)="startEdit()">Modifier</button>
-              <button type="button" class="btn btn-danger btn-md" (click)="remove()">Supprimer</button>
+              <button type="button" class="btn btn-secondary btn-md" (click)="startEdit()">
+                Modifier
+              </button>
+              <button type="button" class="btn btn-danger btn-md" (click)="remove()">
+                Supprimer
+              </button>
             </div>
           }
 
@@ -95,18 +116,35 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
               <div class="grid grid-cols-2 gap-3">
                 <div class="field">
                   <label class="field-label" for="summonerName">Summoner name</label>
-                  <input id="summonerName" type="text" formControlName="summonerName" class="input" />
+                  <input
+                    id="summonerName"
+                    type="text"
+                    formControlName="summonerName"
+                    class="input"
+                  />
                 </div>
                 <div class="field">
                   <label class="field-label" for="tagLine">Tag line</label>
-                  <input id="tagLine" type="text" formControlName="tagLine" class="input" placeholder="EUW" />
+                  <input
+                    id="tagLine"
+                    type="text"
+                    formControlName="tagLine"
+                    class="input"
+                    placeholder="EUW"
+                  />
                 </div>
               </div>
 
               <div class="grid grid-cols-2 gap-3">
                 <div class="field">
                   <label class="field-label" for="region">Région</label>
-                  <input id="region" type="text" formControlName="region" class="input" placeholder="EUW1" />
+                  <input
+                    id="region"
+                    type="text"
+                    formControlName="region"
+                    class="input"
+                    placeholder="EUW1"
+                  />
                 </div>
                 <div class="field">
                   <label class="field-label" for="mainRole">Rôle principal</label>
@@ -121,7 +159,13 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
 
               <div class="field">
                 <label class="field-label" for="rank">Rang</label>
-                <input id="rank" type="text" formControlName="rank" class="input" placeholder="Diamond II" />
+                <input
+                  id="rank"
+                  type="text"
+                  formControlName="rank"
+                  class="input"
+                  placeholder="Diamond II"
+                />
               </div>
 
               <div class="field">
@@ -132,10 +176,16 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
               <app-error-message [error]="error()" />
 
               <div class="flex gap-2 pt-2">
-                <button type="submit" [disabled]="form.invalid || saving()" class="btn btn-primary btn-md">
+                <button
+                  type="submit"
+                  [disabled]="form.invalid || saving()"
+                  class="btn btn-primary btn-md"
+                >
                   {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
                 </button>
-                <button type="button" class="btn btn-ghost btn-md" (click)="cancel()">Annuler</button>
+                <button type="button" class="btn btn-ghost btn-md" (click)="cancel()">
+                  Annuler
+                </button>
               </div>
             </form>
           }
@@ -163,7 +213,12 @@ export class ProfileComponent implements OnInit {
     summonerName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
     tagLine: [
       '',
-      [Validators.required, Validators.minLength(2), Validators.maxLength(10), Validators.pattern(/^[A-Za-z0-9]+$/)],
+      [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(10),
+        Validators.pattern(/^[A-Za-z0-9]+$/),
+      ],
     ],
     region: ['EUW1', [Validators.required, Validators.maxLength(20)]],
     rank: [''],
@@ -182,7 +237,10 @@ export class ProfileComponent implements OnInit {
   private load(): void {
     this.loading.set(true);
     this.profiles.me().subscribe({
-      next: (p) => { this.profile.set(p); this.loading.set(false); },
+      next: p => {
+        this.profile.set(p);
+        this.loading.set(false);
+      },
       error: (err: HttpErrorResponse) => {
         if (err.status === 404) this.profile.set(null);
         else this.error.set(err);
@@ -192,7 +250,14 @@ export class ProfileComponent implements OnInit {
   }
 
   startCreate(): void {
-    this.form.reset({ region: 'EUW1', summonerName: '', tagLine: '', rank: '', mainRole: null, bio: '' });
+    this.form.reset({
+      region: 'EUW1',
+      summonerName: '',
+      tagLine: '',
+      rank: '',
+      mainRole: null,
+      bio: '',
+    });
     this.editing.set(true);
   }
 
@@ -228,18 +293,16 @@ export class ProfileComponent implements OnInit {
       bio: raw.bio || undefined,
     };
 
-    const req$ = this.hasProfile()
-      ? this.profiles.update(payload)
-      : this.profiles.create(payload);
+    const req$ = this.hasProfile() ? this.profiles.update(payload) : this.profiles.create(payload);
 
     req$.subscribe({
-      next: (p) => {
+      next: p => {
         this.profile.set(p);
         this.editing.set(false);
         this.saving.set(false);
         this.toast.success('Profil enregistré');
       },
-      error: (err) => {
+      error: err => {
         this.error.set(err);
         this.saving.set(false);
       },
@@ -253,7 +316,7 @@ export class ProfileComponent implements OnInit {
         this.profile.set(null);
         this.toast.success('Profil supprimé');
       },
-      error: (err) => this.toast.error(this.parseErr(err)),
+      error: err => this.toast.error(this.parseErr(err)),
     });
   }
 

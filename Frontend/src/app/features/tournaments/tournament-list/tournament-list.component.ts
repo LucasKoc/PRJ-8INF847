@@ -39,7 +39,15 @@ const PILL_CLASS: Record<TournamentStatus, string> = {
         </div>
         @if (auth.isTO()) {
           <a routerLink="/tournament/new" class="btn btn-primary btn-md">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4"><path d="M12 5v14M5 12h14"/></svg>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              class="w-4 h-4"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
             Nouveau tournoi
           </a>
         }
@@ -91,20 +99,32 @@ const PILL_CLASS: Record<TournamentStatus, string> = {
                     <h3 class="font-semibold truncate group-hover:text-electric transition-colors">
                       {{ t.name }}
                     </h3>
-                    <span class="label px-2 py-0.5 rounded inline-flex items-center gap-1.5" [class]="pillClass(t.status)">
+                    <span
+                      class="label px-2 py-0.5 rounded inline-flex items-center gap-1.5"
+                      [class]="pillClass(t.status)"
+                    >
                       <span class="w-1.5 h-1.5 rounded-full" [class]="dotClass(t.status)"></span>
                       {{ statusLabel(t.status) }}
                     </span>
                   </div>
                   <p class="text-xs text-muted">
-                    {{ t.game }} · <span class="tag-mono text-ink">{{ t.format }}</span> ·
-                    max <span class="tabular-nums text-ink">{{ t.maxTeams }}</span> équipes
+                    {{ t.game }} · <span class="tag-mono text-ink">{{ t.format }}</span> · max
+                    <span class="tabular-nums text-ink">{{ t.maxTeams }}</span> équipes
                   </p>
                 </div>
 
                 <div class="text-right text-xs text-muted shrink-0 tabular-nums">
                   <div class="flex items-center gap-1.5 justify-end text-ink">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3 text-muted"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="w-3 h-3 text-muted"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <path d="M16 2v4M8 2v4M3 10h18" />
+                    </svg>
                     {{ t.startsAt | date: 'dd MMM · HH:mm' : '' : 'fr-FR' }}
                   </div>
                   <div class="text-[11px] mt-0.5 opacity-80">
@@ -138,28 +158,44 @@ export class TournamentListComponent implements OnInit {
 
   readonly filtered = computed(() => {
     const f = this.selectedFilter();
-    return f === 'ALL' ? this.tournaments() : this.tournaments().filter((t) => t.status === f);
+    return f === 'ALL' ? this.tournaments() : this.tournaments().filter(t => t.status === f);
   });
 
   ngOnInit(): void {
     this.service.list().subscribe({
-      next: (data) => { this.tournaments.set(data); this.loading.set(false); },
-      error: (err) => { this.error.set(err); this.loading.set(false); },
+      next: data => {
+        this.tournaments.set(data);
+        this.loading.set(false);
+      },
+      error: err => {
+        this.error.set(err);
+        this.loading.set(false);
+      },
     });
   }
 
   countFor(value: TournamentStatus | 'ALL'): number {
-    return value === 'ALL' ? this.tournaments().length : this.tournaments().filter((t) => t.status === value).length;
+    return value === 'ALL'
+      ? this.tournaments().length
+      : this.tournaments().filter(t => t.status === value).length;
   }
 
-  statusLabel(s: TournamentStatus): string { return STATUS_LABEL_FR[s]; }
-  pillClass(s: TournamentStatus): string { return PILL_CLASS[s]; }
+  statusLabel(s: TournamentStatus): string {
+    return STATUS_LABEL_FR[s];
+  }
+  pillClass(s: TournamentStatus): string {
+    return PILL_CLASS[s];
+  }
   dotClass(s: TournamentStatus): string {
     switch (s) {
-      case TournamentStatus.OPEN: return 'bg-go';
-      case TournamentStatus.CLOSED: return 'bg-electric';
-      case TournamentStatus.CANCELLED: return 'bg-alert';
-      default: return 'bg-muted';
+      case TournamentStatus.OPEN:
+        return 'bg-go';
+      case TournamentStatus.CLOSED:
+        return 'bg-electric';
+      case TournamentStatus.CANCELLED:
+        return 'bg-alert';
+      default:
+        return 'bg-muted';
     }
   }
 }

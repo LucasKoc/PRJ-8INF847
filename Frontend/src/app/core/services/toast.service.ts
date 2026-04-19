@@ -28,12 +28,12 @@ export class ToastService {
   }
 
   dismiss(id: number): void {
-    this._toasts.update((list) => list.filter((t) => t.id !== id));
+    this._toasts.update(list => list.filter(t => t.id !== id));
   }
 
   private push(message: string, variant: ToastVariant, ttl: number): void {
     const id = ++this.counter;
-    this._toasts.update((list) => [...list, { id, message, variant }]);
+    this._toasts.update(list => [...list, { id, message, variant }]);
     if (ttl > 0) setTimeout(() => this.dismiss(id), ttl);
   }
 }

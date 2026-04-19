@@ -12,21 +12,27 @@ import { AuthService } from '@core/services/auth.service';
     <section class="relative py-16 md:py-24 animate-in overflow-hidden rounded-lg mb-8">
       <!-- Background image -->
       <img
-          src="clash-bg.webp"
-          alt=""
-          aria-hidden="true"
-          class="absolute inset-0 w-full h-full object-cover object-center opacity-25 rounded-lg"
+        src="clash-bg.webp"
+        alt=""
+        aria-hidden="true"
+        class="absolute inset-0 w-full h-full object-cover object-center opacity-25 rounded-lg"
       />
       <!-- Dark gradient overlay so text stays readable -->
-      <div class="absolute inset-0 bg-gradient-to-r from-abyss via-abyss/80 to-transparent rounded-lg"></div>
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-abyss via-abyss/80 to-transparent rounded-lg"
+      ></div>
 
       <!-- Content sits above the image -->
       <div class="relative z-10">
-        <div class="inline-flex items-center gap-2 label text-electric px-2.5 py-1 rounded bg-electric/10 border border-electric/30 mb-8">
-      <span class="relative flex w-1.5 h-1.5">
-        <span class="animate-ping absolute inline-flex w-full h-full rounded-full bg-electric opacity-60"></span>
-        <span class="relative inline-flex w-1.5 h-1.5 rounded-full bg-electric"></span>
-      </span>
+        <div
+          class="inline-flex items-center gap-2 label text-electric px-2.5 py-1 rounded bg-electric/10 border border-electric/30 mb-8"
+        >
+          <span class="relative flex w-1.5 h-1.5">
+            <span
+              class="animate-ping absolute inline-flex w-full h-full rounded-full bg-electric opacity-60"
+            ></span>
+            <span class="relative inline-flex w-1.5 h-1.5 rounded-full bg-electric"></span>
+          </span>
           Plateforme communautaire · League of Legends
         </div>
 
@@ -36,8 +42,8 @@ import { AuthService } from '@core/services/auth.service';
         </h1>
 
         <p class="text-ink/75 text-lg max-w-xl leading-relaxed mb-10">
-          Créez vos équipes, inscrivez-les à des tournois et suivez les inscriptions
-          en temps réel. Pensé pour les communautés LoL casual.
+          Créez vos équipes, inscrivez-les à des tournois et suivez les inscriptions en temps réel.
+          Pensé pour les communautés LoL casual.
         </p>
 
         <div class="flex items-center gap-3 flex-wrap">
@@ -60,8 +66,7 @@ import { AuthService } from '@core/services/auth.service';
         <div class="label text-muted mb-3">01</div>
         <h3 class="mb-2">Tournois communautaires</h3>
         <p class="text-sm text-muted leading-relaxed">
-          Créez, publiez et gérez vos tournois en simple élimination,
-          formats BO1 ou BO3.
+          Créez, publiez et gérez vos tournois en simple élimination, formats BO1 ou BO3.
         </p>
       </div>
       <div class="surface p-6">

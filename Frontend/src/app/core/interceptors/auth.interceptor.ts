@@ -8,9 +8,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = auth.token();
 
   // Only attach to our own API
-  const isOurApi = req.url.startsWith(environment.apiBaseUrl)
-    || req.url.startsWith('/api')
-    || req.url.includes('/api/');
+  const isOurApi =
+    req.url.startsWith(environment.apiBaseUrl) ||
+    req.url.startsWith('/api') ||
+    req.url.includes('/api/');
 
   if (token && isOurApi) {
     req = req.clone({

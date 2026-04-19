@@ -54,7 +54,11 @@ export class TeamsService {
     return this.http.post<TeamMember>(`${this.base}/${teamId}/members`, payload);
   }
 
-  updateMember(teamId: string, memberId: string, payload: UpdateMemberPayload): Observable<TeamMember> {
+  updateMember(
+    teamId: string,
+    memberId: string,
+    payload: UpdateMemberPayload,
+  ): Observable<TeamMember> {
     return this.http.patch<TeamMember>(`${this.base}/${teamId}/members/${memberId}`, payload);
   }
 

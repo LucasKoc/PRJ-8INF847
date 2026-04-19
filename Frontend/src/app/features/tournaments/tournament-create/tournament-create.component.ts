@@ -14,8 +14,19 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
   template: `
     <div class="max-w-2xl mx-auto animate-in">
       <div class="mb-4">
-        <a routerLink="/tournament" class="text-xs text-muted hover:text-ink transition-colors inline-flex items-center gap-1">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <a
+          routerLink="/tournament"
+          class="text-xs text-muted hover:text-ink transition-colors inline-flex items-center gap-1"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="w-3 h-3"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
           Retour aux tournois
         </a>
       </div>
@@ -25,13 +36,20 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
         <h1 class="mb-1">Créer un tournoi</h1>
         <p class="text-sm text-muted mb-6">
           Créé en statut <span class="pill-draft label px-1.5 py-0.5 rounded">BROUILLON</span>.
-          Passez-le en <span class="pill-open label px-1.5 py-0.5 rounded">OUVERT</span> pour accepter les inscriptions.
+          Passez-le en <span class="pill-open label px-1.5 py-0.5 rounded">OUVERT</span> pour
+          accepter les inscriptions.
         </p>
 
         <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
           <div class="field">
             <label class="field-label" for="name">Nom du tournoi</label>
-            <input id="name" type="text" formControlName="name" class="input" placeholder="Spring Cup 2026" />
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              class="input"
+              placeholder="Spring Cup 2026"
+            />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -51,7 +69,12 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
           <div class="grid grid-cols-2 gap-3">
             <div class="field">
               <label class="field-label" for="deadline">Fin des inscriptions</label>
-              <input id="deadline" type="datetime-local" formControlName="registrationDeadline" class="input" />
+              <input
+                id="deadline"
+                type="datetime-local"
+                formControlName="registrationDeadline"
+                class="input"
+              />
             </div>
             <div class="field">
               <label class="field-label" for="startsAt">Début</label>
@@ -61,12 +84,21 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
 
           <div class="grid grid-cols-2 gap-3">
             <div class="field">
-              <label class="field-label" for="endsAt">Fin <span class="text-muted normal-case">(optionnel)</span></label>
+              <label class="field-label" for="endsAt"
+                >Fin <span class="text-muted normal-case">(optionnel)</span></label
+              >
               <input id="endsAt" type="datetime-local" formControlName="endsAt" class="input" />
             </div>
             <div class="field">
               <label class="field-label" for="maxTeams">Nombre max d'équipes</label>
-              <input id="maxTeams" type="number" min="2" max="64" formControlName="maxTeams" class="input" />
+              <input
+                id="maxTeams"
+                type="number"
+                min="2"
+                max="64"
+                formControlName="maxTeams"
+                class="input"
+              />
               <p class="field-hint">Entre 2 et 64.</p>
             </div>
           </div>
@@ -74,7 +106,11 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
           <app-error-message [error]="error()" />
 
           <div class="flex gap-2 pt-2">
-            <button type="submit" [disabled]="form.invalid || loading()" class="btn btn-primary btn-md flex-1">
+            <button
+              type="submit"
+              [disabled]="form.invalid || loading()"
+              class="btn btn-primary btn-md flex-1"
+            >
               {{ loading() ? 'Création…' : 'Créer le tournoi' }}
             </button>
             <a routerLink="/tournament" class="btn btn-ghost btn-md">Annuler</a>
@@ -123,11 +159,11 @@ export class TournamentCreateComponent {
     };
 
     this.tournaments.create(payload).subscribe({
-      next: (t) => {
+      next: t => {
         this.toast.success(`Tournoi "${t.name}" créé`);
         void this.router.navigate(['/tournament', t.id]);
       },
-      error: (err) => {
+      error: err => {
         this.error.set(err);
         this.loading.set(false);
       },

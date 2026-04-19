@@ -17,20 +17,38 @@ import { ToastService, ToastVariant } from '@core/services/toast.service';
           <span class="shrink-0 mt-0.5" [class]="iconColor(t.variant)">
             @switch (t.variant) {
               @case ('success') {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4">
-                  <path d="M20 6L9 17l-5-5"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  class="w-4 h-4"
+                >
+                  <path d="M20 6L9 17l-5-5" />
                 </svg>
               }
               @case ('error') {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M15 9l-6 6M9 9l6 6"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="w-4 h-4"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M15 9l-6 6M9 9l6 6" />
                 </svg>
               }
               @default {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M12 8v4M12 16h.01"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="w-4 h-4"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4M12 16h.01" />
                 </svg>
               }
             }
@@ -42,8 +60,14 @@ import { ToastService, ToastVariant } from '@core/services/toast.service';
             (click)="toast.dismiss(t.id)"
             aria-label="Fermer"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5">
-              <path d="M18 6L6 18M6 6l12 12"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="w-3.5 h-3.5"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
@@ -56,17 +80,23 @@ export class ToastContainerComponent {
 
   accent(v: ToastVariant): string {
     switch (v) {
-      case 'success': return 'bg-go';
-      case 'error':   return 'bg-alert';
-      default:        return 'bg-electric';
+      case 'success':
+        return 'bg-go';
+      case 'error':
+        return 'bg-alert';
+      default:
+        return 'bg-electric';
     }
   }
 
   iconColor(v: ToastVariant): string {
     switch (v) {
-      case 'success': return 'text-go';
-      case 'error':   return 'text-alert';
-      default:        return 'text-electric';
+      case 'success':
+        return 'text-go';
+      case 'error':
+        return 'text-alert';
+      default:
+        return 'text-electric';
     }
   }
 }

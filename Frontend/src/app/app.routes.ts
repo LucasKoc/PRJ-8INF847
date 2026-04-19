@@ -11,38 +11,50 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent),
+        loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent),
       },
       {
         path: 'login',
         canActivate: [guestGuard],
-        loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent),
+        loadComponent: () =>
+          import('./features/auth/login/login.component').then(m => m.LoginComponent),
       },
       {
         path: 'signup',
         canActivate: [guestGuard],
-        loadComponent: () => import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
+        loadComponent: () =>
+          import('./features/auth/register/register.component').then(m => m.RegisterComponent),
       },
       {
         path: 'profile',
         canActivate: [authGuard, roleGuard(UserRole.PLAYER)],
-        loadComponent: () => import('./features/profile/profile.component').then((m) => m.ProfileComponent),
+        loadComponent: () =>
+          import('./features/profile/profile.component').then(m => m.ProfileComponent),
       },
       {
         path: 'teams',
         children: [
           {
             path: '',
-            loadComponent: () => import('./features/teams/team-list/team-list.component').then((m) => m.TeamListComponent),
+            loadComponent: () =>
+              import('./features/teams/team-list/team-list.component').then(
+                m => m.TeamListComponent,
+              ),
           },
           {
             path: 'new',
             canActivate: [authGuard, roleGuard(UserRole.PLAYER)],
-            loadComponent: () => import('./features/teams/team-create/team-create.component').then((m) => m.TeamCreateComponent),
+            loadComponent: () =>
+              import('./features/teams/team-create/team-create.component').then(
+                m => m.TeamCreateComponent,
+              ),
           },
           {
             path: ':id',
-            loadComponent: () => import('./features/teams/team-detail/team-detail.component').then((m) => m.TeamDetailComponent),
+            loadComponent: () =>
+              import('./features/teams/team-detail/team-detail.component').then(
+                m => m.TeamDetailComponent,
+              ),
           },
         ],
       },
@@ -51,16 +63,25 @@ export const routes: Routes = [
         children: [
           {
             path: '',
-            loadComponent: () => import('./features/tournaments/tournament-list/tournament-list.component').then((m) => m.TournamentListComponent),
+            loadComponent: () =>
+              import('./features/tournaments/tournament-list/tournament-list.component').then(
+                m => m.TournamentListComponent,
+              ),
           },
           {
             path: 'new',
             canActivate: [authGuard, roleGuard(UserRole.TO)],
-            loadComponent: () => import('./features/tournaments/tournament-create/tournament-create.component').then((m) => m.TournamentCreateComponent),
+            loadComponent: () =>
+              import('./features/tournaments/tournament-create/tournament-create.component').then(
+                m => m.TournamentCreateComponent,
+              ),
           },
           {
             path: ':id',
-            loadComponent: () => import('./features/tournaments/tournament-detail/tournament-detail.component').then((m) => m.TournamentDetailComponent),
+            loadComponent: () =>
+              import('./features/tournaments/tournament-detail/tournament-detail.component').then(
+                m => m.TournamentDetailComponent,
+              ),
           },
         ],
       },

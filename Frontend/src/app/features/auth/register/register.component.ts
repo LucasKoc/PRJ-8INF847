@@ -21,18 +21,36 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
         <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
           <div class="field">
             <label class="field-label" for="email">Email</label>
-            <input id="email" type="email" formControlName="email" autocomplete="email" class="input" />
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+              class="input"
+            />
           </div>
 
           <div class="field">
             <label class="field-label" for="username">Nom d'utilisateur</label>
-            <input id="username" type="text" formControlName="username" autocomplete="username" class="input" />
+            <input
+              id="username"
+              type="text"
+              formControlName="username"
+              autocomplete="username"
+              class="input"
+            />
             <p class="field-hint">Lettres, chiffres, _ et -. 3 à 50 caractères.</p>
           </div>
 
           <div class="field">
             <label class="field-label" for="password">Mot de passe</label>
-            <input id="password" type="password" formControlName="password" autocomplete="new-password" class="input" />
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              autocomplete="new-password"
+              class="input"
+            />
             <p class="field-hint">Minimum 8 caractères.</p>
           </div>
 
@@ -64,13 +82,19 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
 
           <app-error-message [error]="error()" />
 
-          <button type="submit" [disabled]="form.invalid || loading()" class="btn btn-primary btn-lg w-full">
+          <button
+            type="submit"
+            [disabled]="form.invalid || loading()"
+            class="btn btn-primary btn-lg w-full"
+          >
             {{ loading() ? 'Création…' : 'Créer mon compte' }}
           </button>
         </form>
 
         <div class="relative my-6">
-          <div class="absolute inset-0 flex items-center"><span class="w-full hairline"></span></div>
+          <div class="absolute inset-0 flex items-center">
+            <span class="w-full hairline"></span>
+          </div>
           <div class="relative flex justify-center">
             <span class="bg-surface px-3 text-xs text-muted uppercase tracking-wider">ou</span>
           </div>
@@ -78,7 +102,9 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
 
         <p class="text-sm text-muted text-center">
           Déjà un compte ?
-          <a routerLink="/login" class="text-electric hover:text-electric-hover font-medium">Se connecter</a>
+          <a routerLink="/login" class="text-electric hover:text-electric-hover font-medium"
+            >Se connecter</a
+          >
         </p>
       </div>
     </div>
@@ -133,7 +159,7 @@ export class RegisterComponent {
         this.toast.success('Compte créé avec succès');
         void this.router.navigate(['/']);
       },
-      error: (err) => {
+      error: err => {
         this.error.set(err);
         this.loading.set(false);
       },

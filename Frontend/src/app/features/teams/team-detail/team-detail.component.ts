@@ -27,8 +27,19 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
   template: `
     <div class="animate-in">
       <div class="mb-4">
-        <a routerLink="/teams" class="text-xs text-muted hover:text-ink transition-colors inline-flex items-center gap-1">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <a
+          routerLink="/teams"
+          class="text-xs text-muted hover:text-ink transition-colors inline-flex items-center gap-1"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="w-3 h-3"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
           Retour aux équipes
         </a>
       </div>
@@ -37,14 +48,15 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
         <div class="surface h-48 animate-pulse mb-4"></div>
         <div class="surface h-64 animate-pulse"></div>
       } @else if (team()) {
-
         <!-- ========== HEADER ========== -->
         <div class="surface p-6 mb-4">
           <div class="flex items-start justify-between gap-4 mb-5 flex-wrap">
             <div class="min-w-0">
               <div class="flex items-center gap-3 mb-2 flex-wrap">
                 <h1 class="display text-3xl">{{ team()!.name }}</h1>
-                <span class="tag-mono text-electric bg-electric/10 border border-electric/30 px-2.5 py-1 rounded">
+                <span
+                  class="tag-mono text-electric bg-electric/10 border border-electric/30 px-2.5 py-1 rounded"
+                >
                   {{ team()!.tag }}
                 </span>
               </div>
@@ -64,9 +76,11 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
           <div class="grid grid-cols-3 gap-4 pt-4 border-t border-border">
             <div>
               <div class="label text-muted mb-1">Titulaires</div>
-              <p class="display-xl text-2xl tabular-nums"
-                 [class.text-go]="activeStarters() >= 5"
-                 [class.text-alert]="activeStarters() < 5">
+              <p
+                class="display-xl text-2xl tabular-nums"
+                [class.text-go]="activeStarters() >= 5"
+                [class.text-alert]="activeStarters() < 5"
+              >
                 {{ activeStarters() }}<span class="text-muted text-base font-normal">/5</span>
               </p>
             </div>
@@ -91,12 +105,16 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
               @for (m of members(); track m.id) {
                 <li class="px-6 py-3 flex items-center justify-between gap-3 flex-wrap">
                   <div class="flex items-center gap-3 min-w-0">
-                    <span class="flex items-center justify-center w-8 h-8 rounded-md bg-electric/15 text-electric text-xs font-bold shrink-0">
+                    <span
+                      class="flex items-center justify-center w-8 h-8 rounded-md bg-electric/15 text-electric text-xs font-bold shrink-0"
+                    >
                       {{ userInitial(m) }}
                     </span>
                     <div class="min-w-0">
                       <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-medium text-ink">{{ m.user?.username ?? 'User #' + m.userId }}</span>
+                        <span class="font-medium text-ink">{{
+                          m.user?.username ?? 'User #' + m.userId
+                        }}</span>
                         @if (m.userId === team()!.captainUserId) {
                           <span class="pill-captain label px-1.5 py-0.5 rounded">CAP</span>
                         }
@@ -104,7 +122,9 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
                       <div class="flex items-center gap-2 mt-0.5 text-xs text-muted">
                         <span>{{ roleLabel(m.role) }}</span>
                         @if (m.isSubstitute) {
-                          <span class="px-1.5 py-0.5 rounded bg-raised border border-border">Remplaçant</span>
+                          <span class="px-1.5 py-0.5 rounded bg-raised border border-border"
+                            >Remplaçant</span
+                          >
                         }
                       </div>
                     </div>
@@ -129,11 +149,11 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
           <div class="surface p-6">
             <h2 class="mb-1">Ajouter un membre</h2>
             <p class="text-xs text-muted mb-4">
-              Tapez un nom d'utilisateur pour rechercher. Seuls les comptes PLAYER peuvent rejoindre une équipe.
+              Tapez un nom d'utilisateur pour rechercher. Seuls les comptes PLAYER peuvent rejoindre
+              une équipe.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_auto_auto] gap-3 items-end">
-
               <!-- Username search with autocomplete dropdown -->
               <div class="field relative">
                 <label class="field-label" for="userSearch">Nom d'utilisateur</label>
@@ -151,15 +171,33 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
                   />
                   @if (selectedUser()) {
                     <!-- Checkmark when a user is selected -->
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-go pointer-events-none">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-4 h-4">
-                        <path d="M20 6L9 17l-5-5"/>
+                    <span
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-go pointer-events-none"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        class="w-4 h-4"
+                      >
+                        <path d="M20 6L9 17l-5-5" />
                       </svg>
                     </span>
                   } @else if (searching()) {
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none animate-spin">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    <span
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none animate-spin"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        class="w-4 h-4"
+                      >
+                        <path
+                          d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+                        />
                       </svg>
                     </span>
                   }
@@ -168,7 +206,9 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
                 <!-- Dropdown results -->
                 @if (showDropdown()) {
                   @if (searchResults().length > 0) {
-                    <ul class="absolute z-30 left-0 right-0 top-full mt-1 surface shadow-lg max-h-52 overflow-y-auto rounded-md">
+                    <ul
+                      class="absolute z-30 left-0 right-0 top-full mt-1 surface shadow-lg max-h-52 overflow-y-auto rounded-md"
+                    >
                       @for (u of searchResults(); track u.id) {
                         <li>
                           <button
@@ -177,7 +217,9 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
                             (mousedown)="selectUser(u)"
                           >
                             <div class="flex items-center gap-2">
-                              <span class="flex items-center justify-center w-6 h-6 rounded bg-electric/15 text-electric text-xs font-bold">
+                              <span
+                                class="flex items-center justify-center w-6 h-6 rounded bg-electric/15 text-electric text-xs font-bold"
+                              >
                                 {{ u.username.charAt(0).toUpperCase() }}
                               </span>
                               <span class="font-medium text-ink">{{ u.username }}</span>
@@ -188,7 +230,9 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
                       }
                     </ul>
                   } @else if (searchQuery().length >= 2 && !searching()) {
-                    <div class="absolute z-30 left-0 right-0 top-full mt-1 surface px-3 py-2.5 text-sm text-muted rounded-md">
+                    <div
+                      class="absolute z-30 left-0 right-0 top-full mt-1 surface px-3 py-2.5 text-sm text-muted rounded-md"
+                    >
                       Aucun utilisateur trouvé pour « {{ searchQuery() }} »
                     </div>
                   }
@@ -207,7 +251,11 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
 
               <!-- Substitute checkbox -->
               <label class="flex items-center gap-2 text-sm h-10 whitespace-nowrap cursor-pointer">
-                <input type="checkbox" [formControl]="addForm.controls.isSubstitute" class="accent-electric" />
+                <input
+                  type="checkbox"
+                  [formControl]="addForm.controls.isSubstitute"
+                  class="accent-electric"
+                />
                 Remplaçant
               </label>
 
@@ -224,7 +272,8 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
 
             @if (selectedUser()) {
               <p class="text-xs text-muted mt-2">
-                Sélectionné : <span class="text-ink font-medium">{{ selectedUser()!.username }}</span>
+                Sélectionné :
+                <span class="text-ink font-medium">{{ selectedUser()!.username }}</span>
                 <span class="tag-mono ml-1 text-ghost">ID {{ selectedUser()!.id }}</span>
               </p>
             }
@@ -234,7 +283,6 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
             </div>
           </div>
         }
-
       } @else {
         <app-error-message [error]="error()" />
       }
@@ -278,14 +326,14 @@ export class TeamDetailComponent implements OnInit {
     return !!t && !!u && t.captainUserId === u.id;
   });
 
-  readonly activeCount = computed(() =>
-      this.members().filter((m) => m.status === MemberStatus.ACTIVE).length,
+  readonly activeCount = computed(
+    () => this.members().filter(m => m.status === MemberStatus.ACTIVE).length,
   );
-  readonly activeStarters = computed(() =>
-      this.members().filter((m) => m.status === MemberStatus.ACTIVE && !m.isSubstitute).length,
+  readonly activeStarters = computed(
+    () => this.members().filter(m => m.status === MemberStatus.ACTIVE && !m.isSubstitute).length,
   );
-  readonly activeSubs = computed(() =>
-      this.members().filter((m) => m.status === MemberStatus.ACTIVE && m.isSubstitute).length,
+  readonly activeSubs = computed(
+    () => this.members().filter(m => m.status === MemberStatus.ACTIVE && m.isSubstitute).length,
   );
 
   readonly addForm = this.fb.nonNullable.group({
@@ -293,7 +341,9 @@ export class TeamDetailComponent implements OnInit {
     isSubstitute: [false],
   });
 
-  roleLabel(r: LolRole): string { return LOL_ROLE_LABEL[r]; }
+  roleLabel(r: LolRole): string {
+    return LOL_ROLE_LABEL[r];
+  }
   userInitial(m: TeamMember): string {
     return (m.user?.username ?? '?').charAt(0).toUpperCase();
   }
@@ -303,29 +353,29 @@ export class TeamDetailComponent implements OnInit {
 
     // Debounced search pipeline
     this.searchSubject
-        .pipe(
-            debounceTime(300),
-            distinctUntilChanged(),
-            switchMap((q) => {
-              if (q.length < 2) {
-                this.searchResults.set([]);
-                this.searching.set(false);
-                return [];
-              }
-              this.searching.set(true);
-              return this.usersService.search(q, 8);
-            }),
-        )
-        .subscribe({
-          next: (results) => {
-            this.searchResults.set(results as PublicUser[]);
-            this.searching.set(false);
-          },
-          error: () => {
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap(q => {
+          if (q.length < 2) {
             this.searchResults.set([]);
             this.searching.set(false);
-          },
-        });
+            return [];
+          }
+          this.searching.set(true);
+          return this.usersService.search(q, 8);
+        }),
+      )
+      .subscribe({
+        next: results => {
+          this.searchResults.set(results as PublicUser[]);
+          this.searching.set(false);
+        },
+        error: () => {
+          this.searchResults.set([]);
+          this.searching.set(false);
+        },
+      });
   }
 
   // ---- Search handlers ----
@@ -361,24 +411,26 @@ export class TeamDetailComponent implements OnInit {
     const raw = this.addForm.getRawValue();
 
     // user.id is the numeric bigint string from the API — safe to send as userId
-    this.teamsService.addMember(this.id(), {
-      userId: user.id,
-      role: raw.role,
-      isSubstitute: raw.isSubstitute,
-    }).subscribe({
-      next: () => {
-        this.toast.success(`${user.username} ajouté à l'équipe`);
-        this.adding.set(false);
-        this.selectedUser.set(null);
-        this.searchQuery.set('');
-        this.addForm.reset({ role: LolRole.MID, isSubstitute: false });
-        this.reloadMembers();
-      },
-      error: (err) => {
-        this.addError.set(err);
-        this.adding.set(false);
-      },
-    });
+    this.teamsService
+      .addMember(this.id(), {
+        userId: user.id,
+        role: raw.role,
+        isSubstitute: raw.isSubstitute,
+      })
+      .subscribe({
+        next: () => {
+          this.toast.success(`${user.username} ajouté à l'équipe`);
+          this.adding.set(false);
+          this.selectedUser.set(null);
+          this.searchQuery.set('');
+          this.addForm.reset({ role: LolRole.MID, isSubstitute: false });
+          this.reloadMembers();
+        },
+        error: err => {
+          this.addError.set(err);
+          this.adding.set(false);
+        },
+      });
   }
 
   removeMember(memberId: string): void {
@@ -388,7 +440,7 @@ export class TeamDetailComponent implements OnInit {
         this.toast.success('Membre retiré');
         this.reloadMembers();
       },
-      error: (err) => this.toast.error(this.parseErr(err)),
+      error: err => this.toast.error(this.parseErr(err)),
     });
   }
 
@@ -399,7 +451,7 @@ export class TeamDetailComponent implements OnInit {
         this.toast.success('Équipe supprimée');
         void this.router.navigate(['/teams']);
       },
-      error: (err) => this.toast.error(this.parseErr(err)),
+      error: err => this.toast.error(this.parseErr(err)),
     });
   }
 
@@ -408,18 +460,21 @@ export class TeamDetailComponent implements OnInit {
   private load(): void {
     this.loading.set(true);
     this.teamsService.get(this.id()).subscribe({
-      next: (team) => {
+      next: team => {
         this.team.set(team);
         this.members.set(team.members ?? []);
         this.loading.set(false);
       },
-      error: (err) => { this.error.set(err); this.loading.set(false); },
+      error: err => {
+        this.error.set(err);
+        this.loading.set(false);
+      },
     });
   }
 
   private reloadMembers(): void {
     this.teamsService.listMembers(this.id()).subscribe({
-      next: (members) => this.members.set(members),
+      next: members => this.members.set(members),
     });
   }
 

@@ -13,8 +13,19 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
   template: `
     <div class="max-w-md mx-auto animate-in">
       <div class="mb-4">
-        <a routerLink="/teams" class="text-xs text-muted hover:text-ink transition-colors inline-flex items-center gap-1">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <a
+          routerLink="/teams"
+          class="text-xs text-muted hover:text-ink transition-colors inline-flex items-center gap-1"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="w-3 h-3"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
           Retour aux équipes
         </a>
       </div>
@@ -46,7 +57,11 @@ import { ErrorMessageComponent } from '@shared/ui/error-message.component';
           <app-error-message [error]="error()" />
 
           <div class="flex gap-2 pt-2">
-            <button type="submit" [disabled]="form.invalid || loading()" class="btn btn-primary btn-md flex-1">
+            <button
+              type="submit"
+              [disabled]="form.invalid || loading()"
+              class="btn btn-primary btn-md flex-1"
+            >
               {{ loading() ? 'Création…' : "Créer l'équipe" }}
             </button>
             <a routerLink="/teams" class="btn btn-ghost btn-md">Annuler</a>
@@ -76,11 +91,11 @@ export class TeamCreateComponent {
     this.error.set(null);
 
     this.teams.create(this.form.getRawValue()).subscribe({
-      next: (team) => {
+      next: team => {
         this.toast.success(`Équipe "${team.name}" créée`);
         void this.router.navigate(['/teams', team.id]);
       },
-      error: (err) => {
+      error: err => {
         this.error.set(err);
         this.loading.set(false);
       },

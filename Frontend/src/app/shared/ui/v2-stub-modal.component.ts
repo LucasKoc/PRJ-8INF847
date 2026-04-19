@@ -11,17 +11,20 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       aria-modal="true"
       (click)="handleBackdrop($event)"
     >
-      <div
-        class="surface w-full max-w-md p-6"
-        (click)="$event.stopPropagation()"
-      >
+      <div class="surface w-full max-w-md p-6" (click)="$event.stopPropagation()">
         <div class="flex items-start gap-4 mb-4">
           <div
             class="flex items-center justify-center w-10 h-10 rounded-md bg-electric/15 border border-electric/30 text-electric shrink-0"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 16v-4M12 8h.01"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="w-5 h-5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
             </svg>
           </div>
           <div class="flex-1 min-w-0">
@@ -34,8 +37,14 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
             (click)="close.emit()"
             aria-label="Fermer"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5">
-              <path d="M18 6L6 18M6 6l12 12"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="w-5 h-5"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
         </div>

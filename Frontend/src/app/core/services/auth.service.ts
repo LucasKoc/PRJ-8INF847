@@ -42,13 +42,13 @@ export class AuthService {
   login(payload: LoginPayload): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.base}/login`, payload)
-      .pipe(tap((res) => this.persistSession(res)));
+      .pipe(tap(res => this.persistSession(res)));
   }
 
   register(payload: RegisterPayload): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.base}/register`, payload)
-      .pipe(tap((res) => this.persistSession(res)));
+      .pipe(tap(res => this.persistSession(res)));
   }
 
   logout(): void {

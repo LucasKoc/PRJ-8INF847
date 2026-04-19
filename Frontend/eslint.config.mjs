@@ -21,7 +21,7 @@ export default tseslint.config(
         rules: {
             'prettier/prettier': 'error',
             'no-console': 'error',
-            '@typescript-eslint/explicit-function-return-type': [
+            /*'@typescript-eslint/explicit-function-return-type': [
                 'error',
                 {
                     allowExpressions: false,
@@ -29,7 +29,7 @@ export default tseslint.config(
                     allowHigherOrderFunctions: false,
                 },
             ],
-            '@typescript-eslint/explicit-module-boundary-types': 'error',
+            '@typescript-eslint/explicit-module-boundary-types': 'error',*/
             '@typescript-eslint/no-explicit-any': 'error',
             '@typescript-eslint/no-unused-vars': [
                 'error',

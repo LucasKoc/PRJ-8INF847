@@ -56,13 +56,19 @@ import { V2StubModalComponent } from '@shared/ui/v2-stub-modal.component';
 
           <app-error-message [error]="error()" />
 
-          <button type="submit" [disabled]="form.invalid || loading()" class="btn btn-primary btn-lg w-full">
+          <button
+            type="submit"
+            [disabled]="form.invalid || loading()"
+            class="btn btn-primary btn-lg w-full"
+          >
             {{ loading() ? 'Connexion…' : 'Se connecter' }}
           </button>
         </form>
 
         <div class="relative my-6">
-          <div class="absolute inset-0 flex items-center"><span class="w-full hairline"></span></div>
+          <div class="absolute inset-0 flex items-center">
+            <span class="w-full hairline"></span>
+          </div>
           <div class="relative flex justify-center">
             <span class="bg-surface px-3 text-xs text-muted uppercase tracking-wider">ou</span>
           </div>
@@ -108,12 +114,12 @@ export class LoginComponent {
     this.error.set(null);
 
     this.auth.login(this.form.getRawValue()).subscribe({
-      next: (res) => {
+      next: res => {
         this.toast.success(`Bienvenue, ${res.user.username}`);
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
         void this.router.navigateByUrl(returnUrl);
       },
-      error: (err) => {
+      error: err => {
         this.error.set(err);
         this.loading.set(false);
       },

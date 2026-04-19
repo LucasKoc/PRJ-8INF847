@@ -11,9 +11,15 @@ import { HttpErrorResponse } from '@angular/common/http';
         role="alert"
         class="flex items-start gap-2.5 rounded-md pill-cancelled px-3 py-2.5 text-sm animate-in"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 shrink-0 mt-0.5">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 8v4M12 16h.01"/>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          class="w-4 h-4 shrink-0 mt-0.5"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4M12 16h.01" />
         </svg>
         <span class="flex-1 leading-relaxed">{{ message() }}</span>
       </div>
