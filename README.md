@@ -57,5 +57,11 @@ export SONAR_TOKEN=sqa_9750aa2022808896910dc7a0e53f48711e1187d0
 docker compose -f docker-compose.jenkins.yaml up -d --build
 
 # http://localhost:8080 -> Get admin password -> Install suggested plugins -> Create first admin user
+# Token from SonarQube is needed for SonarQube plugin configuration in Jenkins
+# Webhook on SonarQube side to setup
+# Create job in Jenkins with pipeline script from Jenkinsfile
+# Point to GitHub repo - https://github.com/LucasKoc/PRJ-8INF847
+# Launch job
+
 # docker compose -f docker-compose.jenkins.yaml down
 ```
