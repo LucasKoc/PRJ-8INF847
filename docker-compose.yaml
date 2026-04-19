@@ -43,8 +43,23 @@ services:
       DB_LOGGING: "false"
       JWT_SECRET: ${JWT_SECRET:-change_this_in_prod_with_a_long_random_value}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-3600s}
+    expose:
+      - "3000"
     ports:
       - "3000:3000"
+    networks:
+      - dpscheck_net
+
+  frontend:
+    build:
+      context: ./Frontend/
+      dockerfile: Dockerfile
+    container_name: dpscheck_frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${FRONTEND_PORT:-4200}:80"
     networks:
       - dpscheck_net
 

@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { IsDate, IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
 
 export class CreateTournamentDto {
-  @ApiProperty({ example: 'UQAR Summer Cup 2026', minLength: 3, maxLength: 120 })
+  @ApiProperty({ example: 'Summer cup 2026', minLength: 3, maxLength: 120 })
   @IsString()
   @MinLength(3)
   @MaxLength(120)
