@@ -1,0 +1,17 @@
+# Inventaire Ansible — Environnement RCT (tests métiers)
+# Remplacer les hôtes par les vrais serveurs RCT avant usage en production.
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
+  children:
+    dpscheck_servers:
+      hosts:
+        localhost:
+      vars:
+        api_port: 3010
+        frontend_port: 4210
+        db_port: 5442
+        db_password: rctpwd
+        jwt_secret: rct_secret_change_me

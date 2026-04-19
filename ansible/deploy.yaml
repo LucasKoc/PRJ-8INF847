@@ -8,7 +8,7 @@
     image_tag: "{{ image_tag | default('latest') }}"
     target_env: "{{ target_env | default('dev') }}"
     deploy_dir: "{{ ansible_env.HOME }}/dpscheck-{{ target_env }}"
-    docker_namespace: "kocoglulucas"
+    docker_namespace: "450666049652775641901333182796"
 
   tasks:
 
@@ -55,8 +55,12 @@
       loop:
         - backend
         - frontend
-      # En mode DEV local, on n'a pas forcément les images publiées — on ignore
-      ignore_errors: "{{ target_env == 'dev' }}"
+      register: pull_result
+      retries: 5
+      delay: 10
+      until: pull_result.rc == 0
+      when: target_env != 'dev'
+      ignore_errors: "false"
 
     # ----------------------------------------------------------------------
     # 4. Arrêt de l'ancienne version + démarrage de la nouvelle
@@ -65,12 +69,13 @@
       command: docker compose down
       args:
         chdir: "{{ deploy_dir }}"
-      ignore_errors: true
+      ignore_errors: "true"
 
     - name: "4b · Démarrer la nouvelle version"
       command: docker compose up -d
       args:
         chdir: "{{ deploy_dir }}"
+      ignore_errors: "{{ target_env == 'dev' }}"
 
     # ----------------------------------------------------------------------
     # 5. Vérification post-déploiement
@@ -78,12 +83,12 @@
     - name: "5 · Attendre que l'API réponde (smoke test)"
       uri:
         url: "http://localhost:{{ api_port | default(3000) }}/api/health"
-        status_code: [200, 404]   # 404 accepté si pas d'endpoint /health
+        status_code: [200, 404]   # 404 accepté car pas d'endpoint /health
       register: api_health
       retries: 10
       delay: 3
       until: api_health.status is defined
-      ignore_errors: true
+      ignore_errors: "true"
 
     - name: "6 · Afficher le statut final"
       debug:

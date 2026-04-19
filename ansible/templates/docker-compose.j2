@@ -3,7 +3,7 @@
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: {{ docker_namespace }}/dpscheck-postgres:{{ image_tag }}
     container_name: dpscheck_postgres_{{ target_env }}
     restart: unless-stopped
     environment:
@@ -31,6 +31,7 @@ services:
       DB_PASSWORD: {{ db_password | default('changeme') }}
       DB_NAME: dpscheck
       JWT_SECRET: {{ jwt_secret | default('change_me_in_prd') }}
+      JWT_EXPIRES_IN: 3600s
     ports:
       - "{{ api_port | default(3000) }}:3000"
     networks:

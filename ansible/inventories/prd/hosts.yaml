@@ -1,16 +1,17 @@
 # Inventaire Ansible — Environnement PRD (production)
 # ⚠ Les variables sensibles doivent être chiffrées avec ansible-vault
 all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
   children:
     dpscheck_servers:
       hosts:
-        prd.dpscheck.example.com:
-          ansible_host: 10.0.30.20  # Placeholder
+        localhost:
       vars:
-        ansible_user: deploy
-        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-        api_port: 3000
-        frontend_port: 443
-        db_port: 5432
+        api_port: 3030
+        frontend_port: 4230
+        db_port: 5462
         db_password: "{{ vault_prd_db_password }}"   # chiffré via ansible-vault
         jwt_secret: "{{ vault_prd_jwt_secret }}"     # chiffré via ansible-vault

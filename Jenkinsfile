@@ -27,11 +27,6 @@ pipeline {
             defaultValue: false,
             description: 'Passer les étapes 13 et 14 (déploiement)'
         )
-        booleanParam(
-            name: 'SKIP_DOCKER_PUBLISH',
-            defaultValue: true,
-            description: "Passer l'étape 12 si aucune credential Docker Hub configurée"
-        )
     }
 
     environment {
@@ -272,6 +267,12 @@ pipeline {
                         sh "docker tag ${IMAGE_FRONTEND}:${IMAGE_TAG} ${IMAGE_FRONTEND}:latest"
                     }
                 }
+                stage('Postgres image') {
+                    steps {
+                        sh "docker build -t ${DOCKER_NAMESPACE}/dpscheck-postgres:${IMAGE_TAG} -f Backend/sql/Dockerfile ./Backend/sql"
+                        sh "docker tag ${DOCKER_NAMESPACE}/dpscheck-postgres:${IMAGE_TAG} ${DOCKER_NAMESPACE}/dpscheck-postgres:latest"
+                    }
+                }
             }
         }
 
@@ -304,29 +305,20 @@ pipeline {
         // ====================================================================
         stage('Docker publish') {
             when {
-                allOf {
-                    not { expression { params.SKIP_DOCKER_PUBLISH } }
-                    anyOf {
-                        branch 'main'
-                        branch 'master'
-                        branch 'develop'
-                    }
+                anyOf {
+                    expression { env.GIT_BRANCH == 'origin/master' || env.GIT_BRANCH == 'master' }
                 }
             }
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-creds',
                     usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PWD'
+                    passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh '''
-                        echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push ''' + "${IMAGE_BACKEND}:${IMAGE_TAG}" + '''
-                        docker push ''' + "${IMAGE_BACKEND}:latest" + '''
-                        docker push ''' + "${IMAGE_FRONTEND}:${IMAGE_TAG}" + '''
-                        docker push ''' + "${IMAGE_FRONTEND}:latest" + '''
-                        docker logout
-                    '''
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh "docker push ${IMAGE_BACKEND}:${IMAGE_TAG}"
+                    sh "docker push ${IMAGE_FRONTEND}:${IMAGE_TAG}"
+                    sh "docker push ${DOCKER_NAMESPACE}/dpscheck-postgres:${IMAGE_TAG}"
                 }
             }
         }
@@ -375,28 +367,29 @@ pipeline {
                     def targetEnv = (env.TARGET_ENV ?: 'DEV').toLowerCase()
                     echo "Déploiement vers l'environnement ${targetEnv.toUpperCase()}"
 
-                    // En local ou si pas de credentials SSH, on utilise une connexion locale
+                    sh 'pwd && ls -la && ls -la ansible/ 2>&1 || echo "ansible/ introuvable"'
+
                     if (targetEnv == 'dev') {
+                        // Déploiement local (même machine que Jenkins)
                         sh """
                             ansible-playbook \\
-                                -i ansible/inventories/${targetEnv}/hosts.yaml \\
+                                -i \${WORKSPACE}/ansible/inventories/dev/hosts.yaml \\
                                 --connection=local \\
-                                --extra-vars 'image_tag=${IMAGE_TAG} target_env=${targetEnv}' \\
-                                ansible/deploy.yaml
+                                --extra-vars 'image_tag=${IMAGE_TAG} target_env=dev' \\
+                                \${WORKSPACE}/ansible/deploy.yaml
                         """
                     } else {
+                        // Déploiement SSH distant pour RCT / PPRD / PRD
                         withCredentials([sshUserPrivateKey(
                             credentialsId: 'ansible-ssh-key',
-                            keyFileVariable: 'SSH_KEY',
-                            usernameVariable: 'SSH_USER'
+                            keyFileVariable: 'SSH_KEY'
                         )]) {
                             sh """
                                 ansible-playbook \\
-                                    -i ansible/inventories/${targetEnv}/hosts.yaml \\
-                                    --private-key \$SSH_KEY \\
-                                    --user \$SSH_USER \\
+                                    -i \${WORKSPACE}/ansible/inventories/${targetEnv}/hosts.yaml \\
+                                    --private-key=\${SSH_KEY} \\
                                     --extra-vars 'image_tag=${IMAGE_TAG} target_env=${targetEnv}' \\
-                                    ansible/deploy.yaml
+                                    \${WORKSPACE}/ansible/deploy.yaml
                             """
                         }
                     }
