@@ -99,14 +99,14 @@ pipeline {
                     steps {
                         dir('Backend') {
                             // `|| true` pour ne pas bloquer sur des warnings
-                            sh 'npm run lint || echo "Warnings ESLint côté Backend"'
+                            sh 'npm run lint'
                         }
                     }
                 }
                 stage('Lint Frontend') {
                     steps {
                         dir('Frontend') {
-                            sh 'npm run lint || echo "Warnings ESLint côté Frontend"'
+                            sh 'npm run lint'
                         }
                     }
                 }
@@ -154,7 +154,9 @@ pipeline {
                     done
                 '''
                 dir('Backend') {
-                    sh 'npm run test:e2e'
+                    withEnv(['DB_HOST=host.docker.internal', 'DB_PORT=5433']) {
+                        sh 'npm run test:e2e'
+                    }
                 }
             }
             post {
