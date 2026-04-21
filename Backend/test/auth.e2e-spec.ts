@@ -122,7 +122,7 @@ describe('Auth (intégration)', () => {
       const res = await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({ identifier: compte.username, password: compte.password })
-        .expect(200);
+        .expect(201);
 
       expect(res.body.accessToken).toBeDefined();
       expect(res.body.user.email).toBe('bob@dpscheck.local');

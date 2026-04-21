@@ -60,7 +60,7 @@ docker compose -f docker-compose.jenkins.yaml up -d --build
 # Token from SonarQube is needed for SonarQube plugin configuration in Jenkins
 # Webhook on SonarQube side to setup
 # Create job in Jenkins with pipeline script from Jenkinsfile
-# Point to GitHub repo - https://github.com/LucasKoc/PRJ-8INF847
+# Point to GitHub repo - https://github.com/LucasKoc/PRJ-8INF847  
 # Launch job
 
 # docker compose -f docker-compose.jenkins.yaml down
